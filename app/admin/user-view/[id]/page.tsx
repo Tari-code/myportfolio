@@ -36,6 +36,7 @@ export default function AdminUserView() {
 
   const [user, setUser] = useState<any>(null);
   const [tickets, setTickets] = useState<any[]>([]);
+  const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState("overview");
 
@@ -56,21 +57,19 @@ export default function AdminUserView() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [usersRes] = await Promise.all([
-        fetch("/api/admin/users"),
-      ]);
+      const usersRes = await fetch("/api/admin/users");
       if (usersRes.ok) {
         const data = await usersRes.json();
         const found = data.users?.find((u: any) => u._id === userId);
         if (found) {
           setUser(found);
           setSelectedTier(found.tier || "free");
-          // Fetch tickets for this user
-          const ticketsRes = await fetch(`/api/tickets?user=${encodeURIComponent(found.email)}`);
-          if (ticketsRes.ok) {
-            const ticketData = await ticketsRes.json();
-            setTickets(ticketData);
-          }
+          const [ticketsRes, postsRes] = await Promise.all([
+            fetch(`/api/tickets?user=${encodeURIComponent(found.email)}`),
+            fetch(`/api/admin/user-posts?userId=${userId}`),
+          ]);
+          if (ticketsRes.ok) setTickets(await ticketsRes.json());
+          if (postsRes.ok) { const pd = await postsRes.json(); setPosts(pd.posts || []); }
         }
       }
     } catch (e) {
@@ -170,6 +169,7 @@ export default function AdminUserView() {
 
   const sections = [
     { id: "overview", label: "Overview", icon: Activity },
+    { id: "posts", label: `Posts (${posts.length})`, icon: Newspaper },
     { id: "tickets", label: `Tickets (${tickets.length})`, icon: MessageSquare },
     { id: "actions", label: "Admin Actions", icon: Shield },
   ];
@@ -258,7 +258,7 @@ export default function AdminUserView() {
           {[
             { label: "Total Tickets", value: tickets.length, icon: MessageSquare, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/15" },
             { label: "Open Tickets", value: openTickets, icon: Clock, color: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/15" },
-            { label: "Resolved", value: resolvedTickets, icon: CheckCircle2, color: "text-green-400", bg: "bg-green-500/10", border: "border-green-500/15" },
+            { label: "Published Posts", value: posts.length, icon: Newspaper, color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/15" },
             { label: "Skills", value: user.skills?.length ?? 0, icon: Zap, color: "text-brand-500", bg: "bg-brand-500/10", border: "border-brand-500/15" },
           ].map(stat => {
             const Icon = stat.icon;
@@ -348,6 +348,43 @@ export default function AdminUserView() {
                 </>
               )}
             </div>
+          </div>
+        )}
+
+        {/* Section: Posts */}
+        {activeSection === "posts" && (
+          <div className="glass-panel p-7 rounded-[2.5rem] border border-card-border animate-in fade-in duration-300">
+            <h3 className="font-bold text-sm mb-5 flex items-center gap-2">
+              <Newspaper size={16} className="text-purple-400" />
+              Published Posts ({posts.length})
+            </h3>
+            {posts.length === 0 ? (
+              <div className="text-center py-10">
+                <Newspaper size={32} className="text-foreground/10 mx-auto mb-3" />
+                <p className="text-sm text-foreground/30 font-semibold">No posts published yet</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {posts.map(post => (
+                  <div key={post._id} className="p-5 rounded-2xl border border-card-border hover:border-foreground/10 transition-all group">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${post.isApproved ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"}`}>
+                          {post.isApproved ? "✓ Live" : "Pending"}
+                        </span>
+                        <span className="text-[9px] font-bold text-brand-500/60 bg-brand-500/10 border border-brand-500/15 px-2 py-1 rounded-full">{post.category}</span>
+                      </div>
+                      <span className="text-[10px] text-foreground/30 font-semibold">
+                        {post.createdAt ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }) : ""}
+                      </span>
+                    </div>
+                    <h4 className="font-bold text-sm text-foreground group-hover:text-brand-500 transition-colors mb-1">{post.title}</h4>
+                    {post.summary && <p className="text-xs text-foreground/50 font-medium italic mb-2">"{post.summary}"</p>}
+                    {post.content && <p className="text-xs text-foreground/35 line-clamp-2">{post.content}</p>}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

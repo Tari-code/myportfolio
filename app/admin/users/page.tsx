@@ -222,8 +222,14 @@ export default function AdminUsers() {
             </thead>
             <tbody className="divide-y divide-card-border">
               {filteredUsers.map(user => (
-                <tr key={user._id} className="hover:bg-foreground/[0.015] transition-colors group">
-
+                <tr
+                  key={user._id}
+                  className="hover:bg-foreground/[0.03] transition-colors group cursor-pointer"
+                  onClick={(e) => {
+                    if ((e.target as HTMLElement).closest("select,button,a")) return;
+                    window.location.href = `/admin/user-view/${user._id}`;
+                  }}
+                >
                   {/* User */}
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -231,7 +237,7 @@ export default function AdminUsers() {
                         {user.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="font-bold text-sm text-foreground">{user.name}</p>
+                        <p className="font-bold text-sm text-foreground group-hover:text-brand-500 transition-colors">{user.name}</p>
                         <p className="text-xs text-foreground/40 font-medium">{user.email}</p>
                       </div>
                     </div>

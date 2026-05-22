@@ -58,6 +58,17 @@ export async function POST(req: Request) {
 
     await login(userResponse, !!rememberMe, sessionId);
 
+    // Log activity (fire-and-forget)
+    import("@/lib/models/ActivityLog").then(({ default: ActivityLog }) => {
+      ActivityLog.create({
+        type: "login",
+        userId: user._id,
+        userName: user.name,
+        userEmail: user.email,
+        meta: { ip, tier: user.tier || "free" }
+      }).catch(() => {});
+    }).catch(() => {});
+
     return NextResponse.json({ success: true, user: userResponse });
   } catch (error) {
     console.error("Login error:", error);

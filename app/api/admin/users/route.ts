@@ -77,6 +77,15 @@ export async function PATCH(req: Request) {
         message: `An admin has updated your account tier from ${oldTier.toUpperCase()} to ${tier.toUpperCase()}. Enjoy your new features!`,
         link: "/dashboard",
       }).catch(() => {});
+      import("@/lib/models/ActivityLog").then(({ default: ActivityLog }) => {
+        ActivityLog.create({
+          type: "tier_change",
+          userId: existingUser._id,
+          userName: existingUser.name,
+          userEmail: existingUser.email,
+          meta: { from: oldTier, to: tier, changedBy: session.user.name }
+        }).catch(() => {});
+      }).catch(() => {});
     }
 
     return NextResponse.json({ success: true });

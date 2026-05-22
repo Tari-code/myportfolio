@@ -32,8 +32,19 @@ export async function POST(req: Request) {
       slug,
       author: session.user.name,
       submittedBy: session.user.id.toString(),
-      isApproved: false
+      isApproved: true
     });
+
+    // Log activity (fire-and-forget)
+    import("@/lib/models/ActivityLog").then(({ default: ActivityLog }) => {
+      ActivityLog.create({
+        type: "post",
+        userId: session.user.id,
+        userName: session.user.name,
+        userEmail: session.user.email,
+        meta: { title, category }
+      }).catch(() => {});
+    }).catch(() => {});
 
     return NextResponse.json({ success: true, news });
   } catch (error) {
@@ -79,7 +90,7 @@ export async function PATCH(req: Request) {
 
     const updated = await News.findByIdAndUpdate(
       id,
-      { title, summary, content, category, imageUrl, slug, isApproved: false },
+      { title, summary, content, category, imageUrl, slug, isApproved: true },
       { new: true }
     );
 

@@ -33,6 +33,11 @@ export default function AdminDashboard() {
   const [soundAlerts, setSoundAlerts] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Live Activity Stream
+  const [activityEvents, setActivityEvents] = useState<any[]>([]);
+  const [lastEventTime, setLastEventTime] = useState<string | null>(null);
+  const activityEndRef = useRef<HTMLDivElement>(null);
+
   // Retro Operations Terminal State
   const [terminalInput, setTerminalInput] = useState("");
   const [terminalLogs, setTerminalLogs] = useState<TerminalLog[]>([
@@ -68,11 +73,33 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchActivityStream = async (since?: string) => {
+    try {
+      const url = since ? `/api/admin/activity?limit=30&since=${encodeURIComponent(since)}` : `/api/admin/activity?limit=30`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const events = await res.json();
+        if (events.length > 0) {
+          setActivityEvents(prev => {
+            const ids = new Set(prev.map((e: any) => e._id));
+            const newOnes = events.filter((e: any) => !ids.has(e._id));
+            return [...newOnes, ...prev].slice(0, 60);
+          });
+          setLastEventTime(events[0].createdAt);
+        }
+      }
+    } catch {}
+  };
+
   useEffect(() => {
     fetchStats();
     fetchOperationsConfig();
-    const interval = setInterval(fetchStats, 30000); // Refresh every 30s
-    return () => clearInterval(interval);
+    fetchActivityStream();
+    const statsInterval = setInterval(fetchStats, 30000);
+    const activityInterval = setInterval(() => {
+      setLastEventTime(prev => { fetchActivityStream(prev || undefined); return prev; });
+    }, 8000);
+    return () => { clearInterval(statsInterval); clearInterval(activityInterval); };
   }, []);
 
   useEffect(() => {
@@ -678,30 +705,57 @@ export default function AdminDashboard() {
             </div>
           </section>
 
-          {/* System Pulse */}
-          <section className="glass-panel p-6 md:p-8 rounded-[2rem] border border-card-border">
-            <h3 className="text-xl md:text-2xl font-display font-bold text-foreground mb-8 flex items-center gap-3">
-              <Activity size={24} className="text-brand-500" /> System Pulse
-            </h3>
-            <div className="space-y-8 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-              {data.activities.map((activity: any, i: number) => (
-                <div key={i} className="flex gap-5 relative group">
-                  <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 z-10 border-2 border-background ${
-                    activity.type === 'message' ? 'bg-brand-500' : 
-                    activity.type === 'portfolio' ? 'bg-purple-500' : 
-                    activity.type === 'news' ? 'bg-yellow-500' : 
-                    activity.type === 'review' ? 'bg-green-500' : 
-                    activity.type === 'user' ? 'bg-blue-500' : 'bg-foreground/20'
-                  }`} />
-                  {i !== data.activities.length - 1 && (
-                    <div className="absolute top-4 left-[4.5px] bottom-[-32px] w-0.5 bg-card-border" />
-                  )}
-                  <div className="flex-1">
-                    <p className="text-xs md:text-sm font-bold text-foreground/80 mb-1 leading-tight group-hover:text-foreground transition-colors">{activity.action}</p>
-                    <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-widest">{formatDistanceToNow(new Date(activity.time))} ago</p>
-                  </div>
+          {/* Live Activity Stream */}
+          <section className="glass-panel p-6 md:p-8 rounded-[2rem] border border-card-border relative overflow-hidden">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl md:text-2xl font-display font-bold text-foreground flex items-center gap-3">
+                <ActivityIcon size={24} className="text-brand-500" /> Live Activity
+              </h3>
+              <span className="flex items-center gap-1.5 text-[10px] font-bold text-green-400 bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-ping" />
+                Real-time
+              </span>
+            </div>
+            <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1 custom-scrollbar">
+              {activityEvents.length === 0 ? (
+                <div className="py-10 text-center text-foreground/20 text-xs font-bold uppercase tracking-widest">
+                  Waiting for events...
                 </div>
-              ))}
+              ) : (
+                activityEvents.map((event: any, i: number) => {
+                  const typeMap: Record<string, { label: string; color: string; bg: string; border: string; dot: string }> = {
+                    login:       { label: "Login",       color: "text-green-400",  bg: "bg-green-500/10",  border: "border-green-500/20",  dot: "bg-green-400" },
+                    register:    { label: "Register",    color: "text-blue-400",   bg: "bg-blue-500/10",   border: "border-blue-500/20",   dot: "bg-blue-400" },
+                    ticket:      { label: "Ticket",      color: "text-brand-500",  bg: "bg-brand-500/10",  border: "border-brand-500/20",  dot: "bg-brand-500" },
+                    tier_change: { label: "Tier Change", color: "text-amber-400",  bg: "bg-amber-500/10",  border: "border-amber-500/20",  dot: "bg-amber-400" },
+                    post:        { label: "New Post",    color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20", dot: "bg-purple-400" },
+                    follow:      { label: "Follow",      color: "text-pink-400",   bg: "bg-pink-500/10",   border: "border-pink-500/20",   dot: "bg-pink-400" },
+                  };
+                  const t = typeMap[event.type] || { label: event.type, color: "text-foreground/40", bg: "bg-foreground/5", border: "border-card-border", dot: "bg-foreground/20" };
+                  const desc = event.type === "login"       ? `${event.userName} signed in` :
+                               event.type === "register"    ? `${event.userName} created account` :
+                               event.type === "ticket"      ? `${event.userName} opened a ticket` :
+                               event.type === "tier_change" ? `${event.userName} → ${event.meta?.to?.toUpperCase()}` :
+                               event.type === "post"        ? `${event.userName} published "${event.meta?.title}"` :
+                               event.type === "follow"      ? `${event.userName} followed someone` :
+                               event.type;
+                  return (
+                    <div key={event._id || i} className={`flex items-start gap-3 p-3 rounded-2xl border ${t.bg} ${t.border} animate-in fade-in slide-in-from-left-2 duration-300`}>
+                      <div className={`w-2 h-2 rounded-full ${t.dot} mt-1.5 shrink-0 ${i === 0 ? "animate-ping" : ""}`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-0.5">
+                          <span className={`text-[9px] font-black uppercase tracking-widest ${t.color}`}>{t.label}</span>
+                          <span className="text-[9px] text-foreground/25 font-bold shrink-0">
+                            {formatDistanceToNow(new Date(event.createdAt))} ago
+                          </span>
+                        </div>
+                        <p className="text-xs font-semibold text-foreground/70 truncate">{desc}</p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+              <div ref={activityEndRef} />
             </div>
           </section>
         </div>
