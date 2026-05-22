@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft, UserCheck, UserPlus, MessageSquare, Globe, ExternalLink, AtSign,
   Heart, Clock, Briefcase, User, FileText, Loader2, Activity,
-  MapPin, Calendar, Link2, Check, X
+  MapPin, Calendar, Link2, Check, X, ChevronDown, ChevronUp
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 
@@ -35,10 +35,11 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"about" | "posts" | "work">("about");
+  const [activeTab, setActiveTab] = useState<"about" | "feed" | "work">("about");
   const [posts, setPosts] = useState<any[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [postsFetched, setPostsFetched] = useState(false);
+  const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
 
   const [isFollowing, setIsFollowing] = useState(false);
   const [followHover, setFollowHover] = useState(false);
@@ -51,7 +52,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   }, [id]);
 
   useEffect(() => {
-    if (activeTab === "posts" && !postsFetched) fetchPosts();
+    if (activeTab === "feed" && !postsFetched) fetchPosts();
   }, [activeTab]);
 
   const fetchCurrentUser = async () => {
@@ -127,6 +128,15 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
     router.push(`/dashboard?dm=${id}`);
   };
 
+  const toggleExpand = (postId: string) => {
+    setExpandedPosts(prev => {
+      const next = new Set(prev);
+      if (next.has(postId)) next.delete(postId);
+      else next.add(postId);
+      return next;
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -166,24 +176,27 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
   return (
     <div className="min-h-screen pt-16 md:pt-24 pb-20">
-      {/* Avatar Lightbox */}
+      {/* Full-screen Avatar Lightbox */}
       {lightboxOpen && member.avatar && (
         <div
-          className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[999] bg-black/95 backdrop-blur-md flex items-center justify-center"
           onClick={() => setLightboxOpen(false)}
         >
           <button
             onClick={() => setLightboxOpen(false)}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all"
+            className="absolute top-5 right-5 w-11 h-11 rounded-full bg-white/10 hover:bg-white/25 flex items-center justify-center text-white transition-all z-10"
           >
-            <X size={20} />
+            <X size={22} />
           </button>
           <img
             src={member.avatar}
             alt={member.name}
-            className="max-w-sm w-full max-h-[80vh] object-contain rounded-3xl shadow-2xl"
+            className="max-w-[92vw] max-h-[92vh] w-auto h-auto object-contain rounded-2xl shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           />
+          <p className="absolute bottom-6 left-0 right-0 text-center text-white/50 text-xs font-semibold tracking-wide">
+            {member.name}
+          </p>
         </div>
       )}
 
@@ -196,25 +209,37 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
       </button>
 
       <div className="max-w-lg mx-auto">
-        {/* Cover */}
-        <div className={`h-40 bg-gradient-to-b ${g.cover} relative overflow-hidden`}>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.03),transparent_60%)]" />
-          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 0, transparent 50%)", backgroundSize: "12px 12px" }} />
+        {/* Cover — real image if available, else gradient */}
+        <div className="h-48 relative overflow-hidden">
+          {member.coverPhoto ? (
+            <img
+              src={member.coverPhoto}
+              alt="Cover"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className={`w-full h-full bg-gradient-to-b ${g.cover}`}>
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.03),transparent_60%)]" />
+              <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 0, transparent 50%)", backgroundSize: "12px 12px" }} />
+            </div>
+          )}
+          {/* Fade-to-background at bottom */}
+          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent pointer-events-none" />
         </div>
 
         {/* Profile section */}
         <div className="px-5 md:px-6 bg-background">
-          <div className="flex items-end justify-between -mt-12 mb-4">
+          <div className="flex items-end justify-between -mt-14 mb-4">
             <div className="relative">
               <div
                 onClick={() => member.avatar && setLightboxOpen(true)}
-                className={`w-24 h-24 rounded-full bg-gradient-to-br ${g.avatar} flex items-center justify-center text-white text-3xl font-bold shadow-2xl ring-4 ring-background overflow-hidden ${member.avatar ? "cursor-pointer hover:ring-brand-500/50 transition-all" : ""}`}
+                className={`w-28 h-28 rounded-full bg-gradient-to-br ${g.avatar} flex items-center justify-center text-white text-3xl font-bold shadow-2xl ring-4 ring-background overflow-hidden ${member.avatar ? "cursor-pointer hover:ring-brand-500/50 transition-all" : ""}`}
               >
                 {member.avatar ? (
                   <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
                 ) : initial}
               </div>
-              <div className={`absolute bottom-1 right-1 w-4 h-4 ${onlineStatus.dot} rounded-full border-2 border-background ${onlineStatus.pulse ? "animate-pulse" : ""}`} />
+              <div className={`absolute bottom-1.5 right-1.5 w-4 h-4 ${onlineStatus.dot} rounded-full border-2 border-background ${onlineStatus.pulse ? "animate-pulse" : ""}`} />
             </div>
 
             {!isSelf && currentUser && (
@@ -289,8 +314,8 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           <div className="flex border-b border-card-border -mx-5 md:-mx-6 px-5 md:px-6">
             {[
               { id: "about", label: "About", icon: User },
-              { id: "posts", label: "Posts", icon: FileText },
-              { id: "work", label: "Work", icon: Briefcase },
+              { id: "feed",  label: "Feed",  icon: FileText },
+              { id: "work",  label: "Work",  icon: Briefcase },
             ].map(tab => {
               const Icon = tab.icon;
               return (
@@ -390,8 +415,8 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
             </div>
           )}
 
-          {/* POSTS */}
-          {activeTab === "posts" && (
+          {/* FEED */}
+          {activeTab === "feed" && (
             <div className="space-y-4">
               {loadingPosts ? (
                 <div className="py-12 flex flex-col items-center gap-3">
@@ -403,42 +428,68 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                   <p className="text-sm font-bold">No posts yet</p>
                 </div>
               ) : (
-                posts.map(post => (
-                  <button
-                    key={post._id}
-                    onClick={() => router.push(`/dashboard/post/${post._id}`)}
-                    className="w-full text-left rounded-[1.5rem] border border-card-border hover:border-brand-500/20 transition-all group overflow-hidden bg-foreground/[0.01]"
-                  >
-                    <div className="flex items-center gap-3 p-4 pb-0">
-                      <div className={`w-9 h-9 rounded-2xl bg-gradient-to-br ${g.avatar} flex items-center justify-center text-xs font-bold text-white shrink-0`}>
-                        {member.avatar ? <img src={member.avatar} alt={member.name} className="w-full h-full object-cover rounded-2xl" /> : initial}
+                posts.map(post => {
+                  const isExpanded = expandedPosts.has(post._id);
+                  const hasFullContent = post.content && post.content.length > 0;
+                  return (
+                    <div
+                      key={post._id}
+                      className="rounded-[1.5rem] border border-card-border hover:border-brand-500/20 transition-all overflow-hidden bg-foreground/[0.01]"
+                    >
+                      {/* Post header */}
+                      <div className="flex items-center gap-3 p-4">
+                        <div className={`w-9 h-9 rounded-2xl bg-gradient-to-br ${g.avatar} flex items-center justify-center text-xs font-bold text-white shrink-0`}>
+                          {member.avatar ? <img src={member.avatar} alt={member.name} className="w-full h-full object-cover rounded-2xl" /> : initial}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-sm text-foreground">{member.name}</p>
+                          <div className="flex items-center gap-2 text-[10px] font-bold text-foreground/35 uppercase tracking-wider">
+                            <Clock size={9} /> {post.createdAt ? formatDistanceToNow(new Date(post.createdAt)) + " ago" : ""}
+                            <span className="text-brand-500/70">{post.category}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm text-foreground">{member.name}</p>
-                        <div className="flex items-center gap-2 text-[10px] font-bold text-foreground/35 uppercase tracking-wider">
-                          <Clock size={9} /> {post.createdAt ? formatDistanceToNow(new Date(post.createdAt)) + " ago" : ""}
-                          <span className="text-brand-500/70">{post.category}</span>
+
+                      {/* Cover image if present */}
+                      {post.imageUrl && (
+                        <img src={post.imageUrl} alt={post.title} className="w-full h-48 object-cover" />
+                      )}
+
+                      {/* Post body */}
+                      <div className="px-4 pb-2 space-y-2">
+                        <h4 className="font-bold text-sm text-foreground leading-tight">{post.title}</h4>
+                        {post.summary && (
+                          <p className="text-xs text-foreground/55 font-medium leading-relaxed italic border-l-2 border-brand-500/20 pl-3">&ldquo;{post.summary}&rdquo;</p>
+                        )}
+                        {hasFullContent && (
+                          <div className={`text-sm text-foreground/70 leading-relaxed whitespace-pre-wrap ${isExpanded ? "" : "line-clamp-4"}`}>
+                            {post.content}
+                          </div>
+                        )}
+                        {hasFullContent && (
+                          <button
+                            onClick={() => toggleExpand(post._id)}
+                            className="flex items-center gap-1 text-[10px] font-bold text-brand-500 hover:text-brand-400 transition-colors mt-1"
+                          >
+                            {isExpanded ? <><ChevronUp size={11} /> Show less</> : <><ChevronDown size={11} /> Read more</>}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-5 px-4 py-3 border-t border-card-border">
+                        <div className="flex items-center gap-1.5 text-foreground/30">
+                          <Heart size={14} className={(post.likes?.length || 0) > 0 ? "fill-pink-500 text-pink-500" : ""} />
+                          <span className="text-[11px] font-bold">{(post.likes?.length || 0) > 0 ? post.likes.length : ""} Like</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-foreground/30">
+                          <MessageSquare size={14} />
+                          <span className="text-[11px] font-bold">{(post.comments?.length || 0) > 0 ? `${post.comments.length} Comments` : "Comment"}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="px-4 py-3 space-y-1.5">
-                      <h4 className="font-bold text-sm text-foreground group-hover:text-brand-500 transition-colors leading-tight">{post.title}</h4>
-                      {post.summary && (
-                        <p className="text-xs text-foreground/55 font-medium leading-relaxed italic border-l-2 border-brand-500/20 pl-3">&ldquo;{post.summary}&rdquo;</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-5 px-4 py-3 border-t border-card-border">
-                      <div className="flex items-center gap-1.5 text-foreground/30">
-                        <Heart size={14} className={(post.likes?.length || 0) > 0 ? "fill-pink-500 text-pink-500" : ""} />
-                        <span className="text-[11px] font-bold">{(post.likes?.length || 0) > 0 ? post.likes.length : ""} Like</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-foreground/30">
-                        <MessageSquare size={14} />
-                        <span className="text-[11px] font-bold">{(post.comments?.length || 0) > 0 ? `${post.comments.length} Comments` : "Comment"}</span>
-                      </div>
-                    </div>
-                  </button>
-                ))
+                  );
+                })
               )}
             </div>
           )}

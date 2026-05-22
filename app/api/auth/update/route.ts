@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { name, phone, password, bio, skills, website, github, twitter, location, profileVisibility } = await req.json();
+    const { name, phone, password, bio, skills, website, github, twitter, location, profileVisibility, avatar, coverPhoto } = await req.json();
     const userId = session.user.id;
 
     const updateData: any = { name, phone };
@@ -25,6 +25,8 @@ export async function POST(req: Request) {
     if (typeof github === "string") updateData.github = github;
     if (typeof twitter === "string") updateData.twitter = twitter;
     if (typeof location === "string") updateData.location = location;
+    if (typeof avatar === "string") updateData.avatar = avatar;
+    if (typeof coverPhoto === "string") updateData.coverPhoto = coverPhoto;
     if (profileVisibility && typeof profileVisibility === "object") {
       updateData.profileVisibility = profileVisibility;
     }

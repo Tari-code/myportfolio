@@ -16,6 +16,8 @@ import SecurityContent from "./SecurityContent";
 import OverviewContent from "./OverviewContent";
 import BillingContent from "./BillingContent";
 import NotificationsContent from "./NotificationsContent";
+import MyProfileContent from "./MyProfileContent";
+import ToastNotification from "@/components/ToastNotification";
 
 export default function CustomerDashboard() {
   const [user, setUser] = useState<any>(null);
@@ -698,7 +700,23 @@ Please get in touch to confirm specifications and begin engineering.`;
         </div>
 
         <PushPermission />
-        <TabSwitcher activeTab={activeTab} setActiveTab={(tab) => { setActiveTab(tab); if (tab === "notifications") setTimeout(fetchNotifCount, 1000); }} unreadCount={unreadCount} notifCount={notifCount} />
+        <TabSwitcher
+          activeTab={activeTab}
+          setActiveTab={(tab) => {
+            setActiveTab(tab);
+            if (tab === "notifications") setTimeout(fetchNotifCount, 1000);
+          }}
+          unreadCount={unreadCount}
+          notifCount={notifCount}
+        />
+        <ToastNotification
+          unreadCount={unreadCount}
+          notifCount={notifCount}
+          onNavigate={(tab) => {
+            setActiveTab(tab);
+            if (tab === "notifications") setTimeout(fetchNotifCount, 1000);
+          }}
+        />
 
         {/* Verification Alert */}
         {!user.emailVerified && (
@@ -764,8 +782,14 @@ Please get in touch to confirm specifications and begin engineering.`;
               onSwitchTab={setActiveTab}
             />
           )}
+          {activeTab === "profile" && (
+            <MyProfileContent
+              user={user}
+              onUserUpdate={(updated) => setUser(updated)}
+            />
+          )}
           {activeTab === "notifications" && (
-            <NotificationsContent />
+            <NotificationsContent onNavigate={(tab) => setActiveTab(tab)} />
           )}
           {activeTab === "billing" && (
             <BillingContent

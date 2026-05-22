@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Bell, MessageSquare, Crown, Sparkles, AlertTriangle, CheckCircle2,
-  Users, Heart, Share2, Loader2, Check, X, RefreshCw, BellOff
+  Users, Heart, Share2, Loader2, Check, X, RefreshCw, BellOff, ArrowRight
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -42,7 +43,12 @@ const TYPE_LABELS: Record<string, string> = {
   system: "System",
 };
 
-export default function NotificationsContent() {
+interface Props {
+  onNavigate?: (tab: string) => void;
+}
+
+export default function NotificationsContent({ onNavigate }: Props) {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -88,6 +94,20 @@ export default function NotificationsContent() {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     setUnreadCount(0);
     setMarkingAll(false);
+  };
+
+  const handleNotifClick = async (notif: Notification) => {
+    if (!notif.read) await markOneRead(notif._id);
+    if (!notif.link) return;
+
+    if (notif.link.startsWith("/dashboard?tab=")) {
+      const tab = notif.link.split("tab=")[1];
+      if (onNavigate) onNavigate(tab);
+    } else if (notif.link.startsWith("/")) {
+      router.push(notif.link);
+    } else {
+      window.open(notif.link, "_blank");
+    }
   };
 
   const filtered = filter === "all" ? notifications : notifications.filter(n => n.type === filter);
@@ -175,14 +195,15 @@ export default function NotificationsContent() {
           filtered.map(notif => {
             const cfg = TYPE_CONFIG[notif.type] || TYPE_CONFIG.system;
             const Icon = cfg.icon;
+            const isClickable = !notif.read || !!notif.link;
             return (
-              <div
+              <button
                 key={notif._id}
-                onClick={() => !notif.read && markOneRead(notif._id)}
-                className={`glass-panel flex items-start gap-4 p-5 rounded-[1.5rem] border transition-all cursor-pointer group hover:scale-[1.005] active:scale-[0.998] ${
+                onClick={() => handleNotifClick(notif)}
+                className={`w-full text-left glass-panel flex items-start gap-4 p-5 rounded-[1.5rem] border transition-all group hover:scale-[1.005] active:scale-[0.998] ${
                   notif.read
-                    ? "border-card-border opacity-60"
-                    : `${cfg.border} bg-gradient-to-r from-background to-transparent hover:opacity-100`
+                    ? "border-card-border opacity-60 hover:opacity-80"
+                    : `${cfg.border} bg-gradient-to-r from-background to-transparent`
                 }`}
               >
                 <div className={`w-10 h-10 rounded-2xl ${cfg.bg} flex items-center justify-center ${cfg.color} shrink-0 mt-0.5`}>
@@ -198,11 +219,16 @@ export default function NotificationsContent() {
                     </span>
                   </div>
                   <p className="text-xs text-foreground/50 font-medium mt-1 leading-relaxed">{notif.message}</p>
+                  {notif.link && (
+                    <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-brand-500 group-hover:text-brand-400 transition-colors">
+                      View <ArrowRight size={10} />
+                    </span>
+                  )}
                 </div>
                 {!notif.read && (
                   <div className="w-2.5 h-2.5 rounded-full bg-brand-500 shrink-0 mt-2 animate-pulse" />
                 )}
-              </div>
+              </button>
             );
           })
         )}
