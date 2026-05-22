@@ -252,6 +252,7 @@ export default function AdminDashboard() {
     { label: "Active Tickets", value: data?.stats?.openTickets || 0, icon: MessageSquare, change: "Live Queue", positive: true, color: "text-brand-500", bg: "bg-brand-500/10" },
     { label: "Pending News", value: data?.stats?.pendingNewsCount || 0, icon: Newspaper, change: "Awaiting Action", positive: (data?.stats?.pendingNewsCount || 0) === 0, color: "text-purple-500", bg: "bg-purple-500/10" },
     { label: "Total Users", value: data?.stats?.users || 0, icon: Users, change: "Active Members", positive: true, color: "text-blue-500", bg: "bg-blue-500/10" },
+    { label: "Direct Messages", value: data?.stats?.totalDMs || 0, icon: Globe, change: "User DMs", positive: true, color: "text-green-500", bg: "bg-green-500/10" },
     { label: "Pending Reviews", value: data?.stats?.pendingReviews || 0, icon: Star, change: "Moderation", positive: (data?.stats?.pendingReviews || 0) === 0, color: "text-yellow-500", bg: "bg-yellow-500/10" },
   ];
 
@@ -259,6 +260,7 @@ export default function AdminDashboard() {
     { label: "Portfolio", href: "/admin/portfolio", icon: Plus, color: "bg-brand-600" },
     { label: "Tech News", href: "/admin/news", icon: Newspaper, color: "bg-purple-600" },
     { label: "Members", href: "/admin/users", icon: Shield, color: "bg-blue-600" },
+    { label: "User DMs", href: "/admin/direct-messages", icon: Globe, color: "bg-green-700" },
   ];
 
   return (
@@ -294,7 +296,7 @@ export default function AdminDashboard() {
       </div>
 
        {/* Stats Grid */}
-       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
          {stats.map((stat, i) => (
            <div key={i} className="glass-panel p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-card-border hover:border-brand-500/30 transition-all group relative overflow-hidden">
              <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full blur-3xl opacity-0 transition-all duration-700 group-hover:opacity-20 group-hover:scale-150 ${stat.bg.replace('/10', '')}`} />

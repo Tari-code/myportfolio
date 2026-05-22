@@ -48,6 +48,7 @@ export default function AdminLayout({
     { href: "/admin", label: "Dashboard" },
     { href: "/admin/users", label: "Users" },
     { href: "/admin/messages", label: "Messages" },
+    { href: "/admin/direct-messages", label: "Direct Messages" },
     { href: "/admin/portfolio", label: "Portfolio" },
     { href: "/admin/news", label: "News" },
     { href: "/admin/reviews", label: "Reviews" },

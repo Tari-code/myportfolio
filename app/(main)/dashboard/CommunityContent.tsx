@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Search, Users, Activity, MessageSquare, Heart, Share2, Sparkles, Clock, UserPlus, UserMinus, ShieldCheck } from "lucide-react";
+import { Search, Users, Activity, MessageSquare, Heart, Share2, Clock, Pencil, Trash2, X, Loader2, CheckCircle2, ShieldCheck } from "lucide-react";
 import CommunityCard from "./CommunityCard";
 import ProfileModal from "./ProfileModal";
 import { formatDistanceToNow } from "date-fns";
@@ -27,6 +27,13 @@ export default function CommunityContent({
   const [loadingFeed, setLoadingFeed] = useState(false);
   const [loadingMyPosts, setLoadingMyPosts] = useState(false);
 
+  // Edit modal state
+  const [editingPost, setEditingPost] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({ title: "", summary: "", content: "", category: "Technology" });
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editStatus, setEditStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
   useEffect(() => {
     if (activeSubTab === "feed") {
       fetchFeed();
@@ -51,13 +58,12 @@ export default function CommunityContent({
   };
 
   const fetchMyPosts = async () => {
-    if (!currentUser?._id) return;
     setLoadingMyPosts(true);
     try {
-      const res = await fetch(`/api/news?submittedBy=${currentUser._id}`);
+      const res = await fetch("/api/news/submit");
       if (res.ok) {
         const data = await res.json();
-        setMyPosts(data);
+        setMyPosts(data.news || []);
       }
     } catch (err) {
       console.error("Failed to fetch my posts:", err);
@@ -66,7 +72,64 @@ export default function CommunityContent({
     }
   };
 
-  // Filter out admin users from community view
+  const openEditModal = (post: any) => {
+    setEditingPost(post);
+    setEditForm({
+      title: post.title || "",
+      summary: post.summary || "",
+      content: post.content || "",
+      category: post.category || "Technology"
+    });
+    setEditStatus(null);
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingPost) return;
+    setSavingEdit(true);
+    setEditStatus(null);
+    try {
+      const res = await fetch("/api/news/submit", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: editingPost._id, ...editForm })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setEditStatus({ type: "success", message: "Post updated! It will be re-reviewed." });
+        setMyPosts(prev => prev.map(p => p._id === editingPost._id ? { ...p, ...editForm, isApproved: false } : p));
+        setTimeout(() => {
+          setEditingPost(null);
+          setEditStatus(null);
+        }, 2000);
+      } else {
+        setEditStatus({ type: "error", message: data.error || "Failed to update post." });
+      }
+    } catch (err) {
+      setEditStatus({ type: "error", message: "Network error." });
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    if (!confirm("Delete this post? This cannot be undone.")) return;
+    setDeletingId(postId);
+    try {
+      const res = await fetch(`/api/news/submit?id=${postId}`, { method: "DELETE" });
+      if (res.ok) {
+        setMyPosts(prev => prev.filter(p => p._id !== postId));
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to delete post.");
+      }
+    } catch (err) {
+      alert("Network error.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const nonAdminMembers = members.filter((m) => m.role !== "admin");
 
   const filteredMembers = nonAdminMembers.filter((m) => {
@@ -82,7 +145,6 @@ export default function CommunityContent({
 
   return (
     <section className="glass-panel p-6 md:p-8 rounded-[2.5rem] border border-card-border mb-12 relative overflow-hidden bg-gradient-to-br from-background via-brand-500/[0.005] to-purple-500/[0.005]">
-      {/* Decorative glow */}
       <div className="absolute -top-24 -right-24 w-80 h-80 bg-brand-500/5 blur-3xl rounded-full pointer-events-none" />
 
       {/* Header & Tabs */}
@@ -94,19 +156,19 @@ export default function CommunityContent({
           <div>
             <h2 className="text-2xl font-bold text-foreground">Community Ecosystem</h2>
             <div className="flex gap-4 mt-1.5">
-              <button 
+              <button
                 onClick={() => setActiveSubTab("members")}
                 className={`text-[10px] font-bold uppercase tracking-widest transition-all ${activeSubTab === 'members' ? 'text-brand-500 underline underline-offset-8 decoration-2' : 'text-foreground/30 hover:text-foreground/60'}`}
               >
                 Members ({nonAdminMembers.length})
               </button>
-              <button 
+              <button
                 onClick={() => setActiveSubTab("feed")}
                 className={`text-[10px] font-bold uppercase tracking-widest transition-all ${activeSubTab === 'feed' ? 'text-brand-500 underline underline-offset-8 decoration-2' : 'text-foreground/30 hover:text-foreground/60'}`}
               >
                 Neural Feed
               </button>
-              <button 
+              <button
                 onClick={() => setActiveSubTab("my-posts")}
                 className={`text-[10px] font-bold uppercase tracking-widest transition-all ${activeSubTab === 'my-posts' ? 'text-brand-500 underline underline-offset-8 decoration-2' : 'text-foreground/30 hover:text-foreground/60'}`}
               >
@@ -116,7 +178,6 @@ export default function CommunityContent({
           </div>
         </div>
 
-        {/* Search */}
         {activeSubTab === "members" && (
           <div className="relative group">
             <Search
@@ -162,7 +223,6 @@ export default function CommunityContent({
             </div>
           )
         ) : activeSubTab === "feed" ? (
-          /* Neural Feed */
           <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
             {loadingFeed ? (
               <div className="py-24 flex flex-col items-center gap-4">
@@ -179,9 +239,8 @@ export default function CommunityContent({
               feedPosts.map((post) => {
                 const author = nonAdminMembers.find(m => m._id === post.submittedBy) || { name: post.author || "Anonymous" };
                 const isFollowing = currentUser?.following?.includes(post.submittedBy);
-                
                 return (
-                  <div key={post._id} className="glass-panel p-6 md:p-8 rounded-[2.5rem] border border-card-hover:border-brand-500/20 transition-all group">
+                  <div key={post._id} className="glass-panel p-6 md:p-8 rounded-[2.5rem] border border-card-border hover:border-brand-500/20 transition-all group">
                     <div className="flex items-start justify-between mb-6">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center text-sm font-bold text-brand-500">
@@ -199,9 +258,8 @@ export default function CommunityContent({
                           </div>
                         </div>
                       </div>
-                      
                       {post.submittedBy && post.submittedBy !== currentUser?._id && (
-                        <button 
+                        <button
                           onClick={() => onFollow(post.submittedBy)}
                           className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${isFollowing ? 'bg-foreground/5 text-foreground/40 border border-card-border' : 'bg-brand-500 text-white shadow-lg shadow-brand-500/20 hover:scale-105 active:scale-95'}`}
                         >
@@ -209,21 +267,13 @@ export default function CommunityContent({
                         </button>
                       )}
                     </div>
-
                     <div className="space-y-4">
-                      <h3 className="text-xl font-bold text-foreground group-hover:text-brand-500 transition-colors leading-tight">
-                        {post.title}
-                      </h3>
-                      <p className="text-sm text-foreground/60 font-medium leading-relaxed italic border-l-2 border-brand-500/20 pl-4">
-                        "{post.summary}"
-                      </p>
+                      <h3 className="text-xl font-bold text-foreground group-hover:text-brand-500 transition-colors leading-tight">{post.title}</h3>
+                      <p className="text-sm text-foreground/60 font-medium leading-relaxed italic border-l-2 border-brand-500/20 pl-4">"{post.summary}"</p>
                       {post.content && (
-                        <p className="text-xs text-foreground/45 font-medium line-clamp-3">
-                          {post.content}
-                        </p>
+                        <p className="text-xs text-foreground/45 font-medium line-clamp-3">{post.content}</p>
                       )}
                     </div>
-
                     <div className="flex items-center justify-between mt-8 pt-6 border-t border-card-border">
                       <div className="flex items-center gap-6">
                         <button className="flex items-center gap-2 text-foreground/30 hover:text-brand-500 transition-colors">
@@ -257,97 +307,74 @@ export default function CommunityContent({
               <div className="py-24 text-center opacity-40">
                 <Activity size={48} className="mx-auto mb-4" />
                 <h3 className="font-bold">Your Posts Empty</h3>
-                <p className="text-xs mt-1">You haven't submitted any posts yet. Share your first transmission!</p>
+                <p className="text-xs mt-1">You haven&apos;t submitted any posts yet. Share your first transmission!</p>
               </div>
             ) : (
-              myPosts.map((post) => {
-                const author = nonAdminMembers.find(m => m._id === post.submittedBy) || { name: post.author || "Anonymous" };
-                const isFollowing = currentUser?.following?.includes(post.submittedBy);
-                
-                return (
-                  <div key={post._id} className="glass-panel p-6 md:p-8 rounded-[2.5rem] border border-card-border hover:border-brand-500/20 transition-all group">
-                    <div className="flex items-start justify-between mb-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center text-sm font-bold text-brand-500">
-                          {author.name?.[0].toUpperCase() || "A"}
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-base flex items-center gap-2">
-                            {author.name}
-                            {post.submittedBy && <ShieldCheck size={14} className="text-brand-500" />}
-                          </h4>
-                          <div className="flex items-center gap-3 text-[10px] font-bold text-foreground/40 uppercase tracking-wider mt-0.5">
-                            <span className="flex items-center gap-1.5"><Clock size={10} /> {formatDistanceToNow(new Date(post.createdAt || post.date))} ago</span>
-                            <span>•</span>
-                            <span className="text-brand-500/70">{post.category}</span>
-                          </div>
+              myPosts.map((post) => (
+                <div key={post._id} className="glass-panel p-6 md:p-8 rounded-[2.5rem] border border-card-border hover:border-brand-500/20 transition-all group">
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center text-sm font-bold text-brand-500">
+                        {currentUser?.name?.[0]?.toUpperCase() || "U"}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-base">{currentUser?.name}</h4>
+                        <div className="flex items-center gap-3 text-[10px] font-bold text-foreground/40 uppercase tracking-wider mt-0.5">
+                          <span className="flex items-center gap-1.5"><Clock size={10} /> {formatDistanceToNow(new Date(post.createdAt || post.date))} ago</span>
+                          <span>•</span>
+                          <span className="text-brand-500/70">{post.category}</span>
                         </div>
                       </div>
-                      
-                      {/* Edit/Delete buttons for own posts */}
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => {
-                            // TODO: Implement edit post functionality
-                            alert('Edit post functionality coming soon!');
-                          }}
-                          className="flex items-center gap-2 text-[10px] font-bold text-blue-500 hover:text-blue-400 transition-colors"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8a.75.75 0 01-.75-.75l.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zM7.5 8.25l9 9" />
-                          </svg>
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => {
-                            // TODO: Implement delete post functionality
-                            if (window.confirm('Are you sure you want to delete this post?')) {
-                              alert('Delete post functionality coming soon!');
-                            }
-                          }}
-                          className="flex items-center gap-2 text-[10px] font-bold text-red-500 hover:text-red-400 transition-colors"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79" />
-                          </svg>
-                          Delete
-                        </button>
-                      </div>
                     </div>
-
-                    <div className="space-y-4">
-                      <h3 className="text-xl font-bold text-foreground group-hover:text-brand-500 transition-colors leading-tight">
-                        {post.title}
-                      </h3>
-                      <p className="text-sm text-foreground/60 font-medium leading-relaxed italic border-l-2 border-brand-500/20 pl-4">
-                        "{post.summary}"
-                      </p>
-                      {post.content && (
-                        <p className="text-xs text-foreground/45 font-medium line-clamp-3">
-                          {post.content}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between mt-8 pt-6 border-t border-card-border">
-                      <div className="flex items-center gap-6">
-                        <button className="flex items-center gap-2 text-foreground/30 hover:text-brand-500 transition-colors">
-                          <Heart size={16} />
-                          <span className="text-[10px] font-bold uppercase tracking-wider">Neural Pulse</span>
-                        </button>
-                        <button className="flex items-center gap-2 text-foreground/30 hover:text-purple-500 transition-colors">
-                          <MessageSquare size={16} />
-                          <span className="text-[10px] font-bold uppercase tracking-wider">Comment</span>
-                        </button>
-                      </div>
-                      <button className="flex items-center gap-2 text-foreground/30 hover:text-foreground transition-colors">
-                        <Share2 size={16} />
-                        <span className="text-[10px] font-bold uppercase tracking-widest">Relay</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => openEditModal(post)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold text-blue-500 hover:bg-blue-500/10 border border-transparent hover:border-blue-500/20 transition-all"
+                      >
+                        <Pencil size={12} /> Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeletePost(post._id)}
+                        disabled={deletingId === post._id}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all disabled:opacity-50"
+                      >
+                        {deletingId === post._id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                        Delete
                       </button>
                     </div>
                   </div>
-                );
-              })
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-xl font-bold text-foreground group-hover:text-brand-500 transition-colors leading-tight">{post.title}</h3>
+                      <span className={`shrink-0 text-[9px] font-bold px-2.5 py-1 rounded-full ${post.isApproved ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'}`}>
+                        {post.isApproved ? '✓ Approved' : '⏳ Pending'}
+                      </span>
+                    </div>
+                    <p className="text-sm text-foreground/60 font-medium leading-relaxed italic border-l-2 border-brand-500/20 pl-4">"{post.summary}"</p>
+                    {post.content && (
+                      <p className="text-xs text-foreground/45 font-medium line-clamp-3">{post.content}</p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between mt-8 pt-6 border-t border-card-border">
+                    <div className="flex items-center gap-6">
+                      <button className="flex items-center gap-2 text-foreground/30 hover:text-brand-500 transition-colors">
+                        <Heart size={16} />
+                        <span className="text-[10px] font-bold uppercase tracking-wider">Neural Pulse</span>
+                      </button>
+                      <button className="flex items-center gap-2 text-foreground/30 hover:text-purple-500 transition-colors">
+                        <MessageSquare size={16} />
+                        <span className="text-[10px] font-bold uppercase tracking-wider">Comment</span>
+                      </button>
+                    </div>
+                    <button className="flex items-center gap-2 text-foreground/30 hover:text-foreground transition-colors">
+                      <Share2 size={16} />
+                      <span className="text-[10px] font-bold uppercase tracking-widest">Relay</span>
+                    </button>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         )}
@@ -365,6 +392,93 @@ export default function CommunityContent({
             onMessage(m);
           }}
         />
+      )}
+
+      {/* Edit Post Modal */}
+      {editingPost && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-background/70 backdrop-blur-md" onClick={() => setEditingPost(null)} />
+          <div className="glass-panel p-8 rounded-[2.5rem] border border-card-border max-w-lg w-full relative z-10 shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+                <Pencil size={18} className="text-brand-500" /> Edit Post
+              </h3>
+              <button onClick={() => setEditingPost(null)} className="p-2 rounded-xl hover:bg-foreground/5 text-foreground/40 transition-all">
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="space-y-4">
+              <div>
+                <label className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest block mb-1.5">Title</label>
+                <input
+                  type="text"
+                  value={editForm.title}
+                  onChange={e => setEditForm({ ...editForm, title: e.target.value })}
+                  required
+                  className="w-full bg-foreground/[0.03] border border-card-border rounded-xl py-3 px-4 text-sm text-foreground focus:outline-none focus:border-brand-500/50 transition-all font-medium"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest block mb-1.5">Summary</label>
+                <input
+                  type="text"
+                  value={editForm.summary}
+                  onChange={e => setEditForm({ ...editForm, summary: e.target.value })}
+                  required
+                  className="w-full bg-foreground/[0.03] border border-card-border rounded-xl py-3 px-4 text-sm text-foreground focus:outline-none focus:border-brand-500/50 transition-all font-medium"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest block mb-1.5">Category</label>
+                <select
+                  value={editForm.category}
+                  onChange={e => setEditForm({ ...editForm, category: e.target.value })}
+                  className="w-full bg-foreground/[0.03] border border-card-border rounded-xl py-3 px-4 text-sm text-foreground focus:outline-none focus:border-brand-500/50 transition-all font-medium"
+                >
+                  {["Technology", "AI", "Web Dev", "Design", "Business", "Open Source"].map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest block mb-1.5">Content</label>
+                <textarea
+                  value={editForm.content}
+                  onChange={e => setEditForm({ ...editForm, content: e.target.value })}
+                  rows={5}
+                  required
+                  className="w-full bg-foreground/[0.03] border border-card-border rounded-xl py-3 px-4 text-sm text-foreground focus:outline-none focus:border-brand-500/50 transition-all font-medium resize-none"
+                />
+              </div>
+
+              {editStatus && (
+                <div className={`flex items-center gap-2 p-3 rounded-xl text-xs font-bold ${editStatus.type === 'success' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
+                  {editStatus.type === 'success' ? <CheckCircle2 size={14} /> : <X size={14} />}
+                  {editStatus.message}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingPost(null)}
+                  className="flex-1 px-4 py-3 rounded-xl bg-foreground/5 border border-card-border text-foreground/60 font-bold hover:bg-foreground/10 transition-all text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className="flex-1 px-4 py-3 rounded-xl bg-brand-500 text-white font-bold hover:bg-brand-400 transition-all shadow-lg shadow-brand-500/20 text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {savingEdit ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </section>
   );

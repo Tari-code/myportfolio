@@ -7,6 +7,7 @@ import User from "@/lib/models/User";
 import News from "@/lib/models/News";
 import Review from "@/lib/models/Review";
 import Visit from "@/lib/models/Visit";
+import Message from "@/lib/models/Message";
 
 export async function GET() {
   try {
@@ -21,6 +22,7 @@ export async function GET() {
     const totalNews = await News.countDocuments();
     const pendingNewsCount = await News.countDocuments({ isApproved: false });
     const pendingReviews = await Review.countDocuments({ isApproved: false });
+    const totalDMs = await Message.countDocuments();
 
     // Recent Activity (combine from different collections)
     const recentTickets = await Ticket.find().sort({ createdAt: -1 }).limit(5);
@@ -87,7 +89,8 @@ export async function GET() {
         users: totalUsers,
         news: totalNews,
         pendingNewsCount,
-        pendingReviews
+        pendingReviews,
+        totalDMs
       },
       activities,
       liveSupport,
