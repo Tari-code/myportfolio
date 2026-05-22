@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft, UserCheck, UserPlus, MessageSquare, Globe, ExternalLink, AtSign,
   Heart, Clock, Briefcase, User, FileText, Loader2, Activity,
-  MapPin, Calendar, Link2, Check
+  MapPin, Calendar, Link2, Check, X
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 
@@ -43,6 +43,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   const [isFollowing, setIsFollowing] = useState(false);
   const [followHover, setFollowHover] = useState(false);
   const [following, setFollowing] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   useEffect(() => {
     fetchCurrentUser();
@@ -153,8 +154,39 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   const joinedDate = member.createdAt ? new Date(member.createdAt) : null;
   const isSelf = currentUser?._id === id || currentUser?.id === id;
 
+  const getOnlineStatus = (lastSeen?: string | null) => {
+    if (!lastSeen) return { dot: "bg-gray-500", pulse: false };
+    const diff = Date.now() - new Date(lastSeen).getTime();
+    const min = Math.floor(diff / 60000);
+    if (min < 3) return { dot: "bg-green-500", pulse: true };
+    if (min < 60) return { dot: "bg-yellow-400", pulse: false };
+    return { dot: "bg-gray-500", pulse: false };
+  };
+  const onlineStatus = getOnlineStatus(member.lastSeen);
+
   return (
     <div className="min-h-screen pt-16 md:pt-24 pb-20">
+      {/* Avatar Lightbox */}
+      {lightboxOpen && member.avatar && (
+        <div
+          className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setLightboxOpen(false)}
+        >
+          <button
+            onClick={() => setLightboxOpen(false)}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all"
+          >
+            <X size={20} />
+          </button>
+          <img
+            src={member.avatar}
+            alt={member.name}
+            className="max-w-sm w-full max-h-[80vh] object-contain rounded-3xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+
       {/* Floating back button */}
       <button
         onClick={() => router.back()}
@@ -174,12 +206,15 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
         <div className="px-5 md:px-6 bg-background">
           <div className="flex items-end justify-between -mt-12 mb-4">
             <div className="relative">
-              <div className={`w-24 h-24 rounded-full bg-gradient-to-br ${g.avatar} flex items-center justify-center text-white text-3xl font-bold shadow-2xl ring-4 ring-background overflow-hidden`}>
+              <div
+                onClick={() => member.avatar && setLightboxOpen(true)}
+                className={`w-24 h-24 rounded-full bg-gradient-to-br ${g.avatar} flex items-center justify-center text-white text-3xl font-bold shadow-2xl ring-4 ring-background overflow-hidden ${member.avatar ? "cursor-pointer hover:ring-brand-500/50 transition-all" : ""}`}
+              >
                 {member.avatar ? (
                   <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
                 ) : initial}
               </div>
-              <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background" />
+              <div className={`absolute bottom-1 right-1 w-4 h-4 ${onlineStatus.dot} rounded-full border-2 border-background ${onlineStatus.pulse ? "animate-pulse" : ""}`} />
             </div>
 
             {!isSelf && currentUser && (

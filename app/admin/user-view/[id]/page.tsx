@@ -195,6 +195,13 @@ export default function AdminUserView() {
               Refresh
             </button>
             <button
+              onClick={() => router.push(`/admin/user-edit/${userId}`)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-500/10 border border-brand-500/20 text-brand-400 hover:bg-brand-500/20 text-xs font-bold transition-all"
+            >
+              <Edit3 size={13} />
+              Edit Profile
+            </button>
+            <button
               onClick={handleDelete}
               disabled={deletingUser}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 text-xs font-bold transition-all"

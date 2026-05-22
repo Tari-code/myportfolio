@@ -15,9 +15,35 @@ export async function GET() {
       { email: session.user.email },
       { $set: { lastSeen: new Date() } },
       { returnDocument: "after" }
-    ).select("emailVerified name role");
+    ).select("-password");
+
     if (dbUser) {
-      session.user.emailVerified = dbUser.emailVerified ?? false;
+      const fullUser = {
+        id: dbUser._id.toString(),
+        _id: dbUser._id.toString(),
+        name: dbUser.name,
+        email: dbUser.email,
+        role: dbUser.role,
+        phone: dbUser.phone || "",
+        emailVerified: dbUser.emailVerified ?? false,
+        avatar: dbUser.avatar || "",
+        bio: dbUser.bio || "",
+        skills: dbUser.skills || [],
+        following: dbUser.following || [],
+        followers: dbUser.followers || [],
+        tier: dbUser.tier || "free",
+        apiKey: dbUser.apiKey || null,
+        company: dbUser.company || "",
+        website: dbUser.website || "",
+        github: dbUser.github || "",
+        twitter: dbUser.twitter || "",
+        location: dbUser.location || "",
+        industry: dbUser.industry || "",
+        profileVisibility: dbUser.profileVisibility || {},
+        lastSeen: dbUser.lastSeen,
+        createdAt: dbUser.createdAt,
+      };
+      return NextResponse.json({ authenticated: true, user: fullUser });
     }
   } catch (_) {}
 

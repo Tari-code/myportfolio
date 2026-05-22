@@ -220,20 +220,25 @@ export default function OverviewContent({ user, tickets, userNews, onSwitchTab }
                 {recentActivity.map((item, i) => {
                   const Icon = item.icon;
                   return (
-                    <div key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-foreground/[0.02] border border-card-border hover:border-foreground/10 transition-all">
-                      <div className={`w-9 h-9 rounded-xl bg-foreground/5 flex items-center justify-center ${item.color} shrink-0`}>
+                    <button
+                      key={i}
+                      onClick={() => onSwitchTab(item.type === "ticket" ? "comms" : "news")}
+                      className="w-full text-left flex items-start gap-4 p-4 rounded-2xl bg-foreground/[0.02] border border-card-border hover:border-brand-500/20 hover:bg-brand-500/[0.02] transition-all group cursor-pointer"
+                    >
+                      <div className={`w-9 h-9 rounded-xl bg-foreground/5 flex items-center justify-center ${item.color} shrink-0 group-hover:scale-110 transition-transform`}>
                         <Icon size={15} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="text-xs font-bold text-foreground truncate">{item.label}</p>
+                          <p className="text-xs font-bold text-foreground truncate group-hover:text-brand-500 transition-colors">{item.label}</p>
                           <span className="text-[9px] text-foreground/30 font-semibold shrink-0">
                             {item.time ? formatDistanceToNow(new Date(item.time), { addSuffix: true }) : ""}
                           </span>
                         </div>
                         <p className="text-[10px] text-foreground/40 font-semibold mt-0.5 truncate">{item.sub}</p>
                       </div>
-                    </div>
+                      <ChevronRight size={12} className="text-foreground/20 group-hover:text-brand-500/50 shrink-0 mt-1 group-hover:translate-x-0.5 transition-all" />
+                    </button>
                   );
                 })}
               </div>

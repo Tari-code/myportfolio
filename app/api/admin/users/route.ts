@@ -51,19 +51,31 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id, role, tier } = await req.json();
-    if (!id || (!role && !tier)) {
-      return NextResponse.json({ error: "ID and at least one field (role or tier) are required" }, { status: 400 });
+    const { id, role, tier, name, bio, skills, location, website, github, twitter, avatar } = await req.json();
+    if (!id) {
+      return NextResponse.json({ error: "User ID is required" }, { status: 400 });
     }
 
     const existingUser = await User.findById(id);
     if (!existingUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    const update: Record<string, string> = {};
+    const update: Record<string, any> = {};
     if (role) update.role = role;
     if (tier) update.tier = tier;
+    if (typeof name === "string" && name.trim()) update.name = name.trim();
+    if (typeof bio === "string") update.bio = bio;
+    if (Array.isArray(skills)) update.skills = skills;
+    if (typeof location === "string") update.location = location;
+    if (typeof website === "string") update.website = website;
+    if (typeof github === "string") update.github = github;
+    if (typeof twitter === "string") update.twitter = twitter;
+    if (typeof avatar === "string") update.avatar = avatar;
 
-    await User.findByIdAndUpdate(id, update);
+    if (Object.keys(update).length === 0) {
+      return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+    }
+
+    await User.findByIdAndUpdate(id, { $set: update });
 
     // Fire-and-forget notifications on tier change
     if (tier && tier !== existingUser.tier) {

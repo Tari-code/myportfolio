@@ -191,7 +191,7 @@ export default function CustomerSettings() {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => user?._id && router.push(`/dashboard/profile/${user._id}`)}
+              onClick={() => { const uid = user?._id || user?.id; if (uid) router.push(`/dashboard/profile/${uid}`); }}
               className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-foreground/5 border border-card-border text-foreground/70 hover:text-brand-500 hover:border-brand-500/30 text-sm font-bold transition-all active:scale-95"
             >
               <Eye size={16} /> View as Others

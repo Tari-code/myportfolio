@@ -66,7 +66,7 @@ export default function CommsContent({
   }).length;
 
   return (
-    <section className="glass-panel p-4 md:p-6 rounded-[2rem] border border-card-border mb-12 relative overflow-hidden">
+    <section className="mb-12 relative overflow-hidden">
       <div className="absolute inset-0 -z-10" aria-hidden="true">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(139,92,246,0.03),transparent_70%),radial-gradient(circle_at_bottom_right,_rgba(59,130,246,0.02),transparent_70%)] pointer-events-none" />
       </div>
