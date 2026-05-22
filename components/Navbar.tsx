@@ -228,7 +228,7 @@ export default function Navbar() {
       </div>
 
       {/* Mobile Menu */}
-      <div className={`lg:hidden fixed inset-0 z-[-1] transition-all duration-500 ${isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
+      <div className={`lg:hidden fixed inset-0 z-[90] transition-all duration-500 ${isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}>
         <div className="absolute inset-0 bg-background/80 backdrop-blur-3xl" onClick={() => setIsMobileMenuOpen(false)} />
         <div className={`absolute top-0 right-0 w-[85%] sm:w-[70%] h-full bg-background border-l border-card-border p-8 md:p-12 flex flex-col gap-6 md:gap-8 transition-transform duration-500 ease-expo ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
           <div className="flex flex-col gap-4 md:gap-6 pt-12 overflow-y-auto">
@@ -270,6 +270,10 @@ export default function Navbar() {
           </div>
 
           <div className="mt-auto flex flex-col gap-4">
+            <div className="flex items-center justify-between px-1 py-3 border-t border-card-border">
+              <span className="text-sm font-bold text-foreground/40 uppercase tracking-widest">Appearance</span>
+              <ThemeToggle />
+            </div>
             {user ? (
               <button onClick={handleLogout} className="w-full py-4 md:py-5 rounded-2xl bg-red-500 text-white text-center font-bold text-lg md:text-xl shadow-xl shadow-red-500/20">
                 Sign Out
