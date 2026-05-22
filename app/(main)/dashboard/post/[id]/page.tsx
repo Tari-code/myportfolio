@@ -206,21 +206,22 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   return (
-    <div className="min-h-screen pt-20 md:pt-24 pb-24">
-      {/* Sticky header */}
-      <div className="sticky top-16 md:top-24 z-40 bg-background/80 backdrop-blur-xl border-b border-card-border px-4 md:px-6 py-3 flex items-center justify-between">
-        <button
-          onClick={() => router.back()}
-          className="p-2 rounded-xl hover:bg-foreground/10 text-foreground/60 transition-all -ml-1"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <button onClick={handleShare} className="p-2 rounded-xl hover:bg-foreground/10 text-foreground/60 transition-all">
-          {copied ? <Check size={18} className="text-green-500" /> : <Share2 size={18} />}
-        </button>
-      </div>
+    <div className="min-h-screen pt-20 md:pt-28 pb-24">
+      {/* Floating back + share buttons */}
+      <button
+        onClick={() => router.back()}
+        className="fixed top-[72px] md:top-24 left-4 z-50 w-9 h-9 flex items-center justify-center rounded-full bg-background/60 backdrop-blur-md border border-card-border text-foreground/60 hover:text-foreground shadow-sm transition-all"
+      >
+        <ArrowLeft size={18} />
+      </button>
+      <button
+        onClick={handleShare}
+        className="fixed top-[72px] md:top-24 right-4 z-50 w-9 h-9 flex items-center justify-center rounded-full bg-background/60 backdrop-blur-md border border-card-border text-foreground/60 hover:text-foreground shadow-sm transition-all"
+      >
+        {copied ? <Check size={16} className="text-green-500" /> : <Share2 size={16} />}
+      </button>
 
-      <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
+      <div className="max-w-2xl mx-auto px-4 md:px-6 py-2 md:py-6 space-y-6">
         {/* Post body */}
         <div className="glass-panel rounded-[1.5rem] md:rounded-[2rem] border border-card-border overflow-hidden">
           <div className="p-5 md:p-8">

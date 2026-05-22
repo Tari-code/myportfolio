@@ -154,13 +154,14 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   const isSelf = currentUser?._id === id || currentUser?.id === id;
 
   return (
-    <div className="min-h-screen pt-20 md:pt-24 pb-20">
-      {/* Sticky back button */}
-      <div className="sticky top-16 md:top-24 z-40 bg-background/80 backdrop-blur-xl border-b border-card-border px-4 md:px-6 py-3">
-        <button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-foreground/10 text-foreground/60 transition-all -ml-1">
-          <ArrowLeft size={20} />
-        </button>
-      </div>
+    <div className="min-h-screen pt-16 md:pt-24 pb-20">
+      {/* Floating back button */}
+      <button
+        onClick={() => router.back()}
+        className="fixed top-[72px] md:top-24 left-4 z-50 w-9 h-9 flex items-center justify-center rounded-full bg-background/60 backdrop-blur-md border border-card-border text-foreground/60 hover:text-foreground shadow-sm transition-all"
+      >
+        <ArrowLeft size={18} />
+      </button>
 
       <div className="max-w-lg mx-auto">
         {/* Cover */}
