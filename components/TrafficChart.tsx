@@ -45,7 +45,7 @@ export default function TrafficChart({ data }: TrafficChartProps) {
   const chartRef = useRef<any>(null);
 
   // Format labels from YYYY-MM-DD to "MMM DD" (e.g. "May 20")
-  const labels = data.map((item) => {
+  const labels = data.map((item: any) => {
     try {
       const dateParts = item.date.split("-");
       if (dateParts.length === 3) {
