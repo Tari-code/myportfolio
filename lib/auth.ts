@@ -11,7 +11,7 @@ export async function hashPassword(password: string) {
 
 export async function comparePassword(password: string, hash: string) {
   return await bcrypt.compare(password, hash);
-}
+} 
 
 export async function encrypt(payload: any, expiresIn: string = "2h") {
   return await new SignJWT(payload)
