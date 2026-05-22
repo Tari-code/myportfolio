@@ -185,7 +185,7 @@ export default function DirectDMs({
                   >
                     <div className="relative shrink-0">
                       <Avatar name={other?.name} avatar={other?.avatar} size="lg"
-                        onClick={(e: any) => { e.stopPropagation(); if (other?._id) router.push(`/dashboard/profile/${other._id}`); }}
+                        onClick={() => { if (other?._id) router.push(`/dashboard/profile/${other._id}`); }}
                       />
                       <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 ${status.dot} rounded-full border-2 border-background`} />
                     </div>

@@ -44,6 +44,7 @@ export default function CommunityContent({
   onFollow,
   onMessage,
 }: CommunityContentProps) {
+  const [openPost, setOpenPost] = useState(null);
   const router = useRouter();
   const [activeSubTab, setActiveSubTab] = useState<"feed" | "members" | "my-posts">("feed");
   const [search, setSearch] = useState("");
@@ -132,7 +133,14 @@ export default function CommunityContent({
       if (res.ok) {
         const data = await res.json();
         setLikes(prev => ({ ...prev, [postId]: { count: data.likes, liked: data.liked } }));
-        if (openPost?._id === postId) setOpenPost((prev: any) => prev ? { ...prev, _likesCount: data.likes } : prev);
+        setOpenPost((prev: any) => {
+  if (!prev || prev._id !== postId) return prev;
+
+  return {
+    ...prev,
+    _likesCount: data.likes,
+  };
+});
       }
     } catch {
       setLikes(prev => ({
