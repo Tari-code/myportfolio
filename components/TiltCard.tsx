@@ -62,7 +62,7 @@ export default function TiltCard({
           style={{
             background: `radial-gradient(circle 200px at ${mousePos.x}px ${mousePos.y}px, rgba(99,102,241,${glareIntensity}), transparent)`,
             mixBlendMode: "screen",
-          }}
+          }}  
         />
       )}
     </div>
