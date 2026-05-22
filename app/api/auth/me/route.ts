@@ -9,10 +9,13 @@ export async function GET() {
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
 
-  // Always fetch fresh emailVerified from DB so the banner reflects real state
   try {
     await connectDB();
-    const dbUser = await User.findOne({ email: session.user.email }).select("emailVerified name role");
+    const dbUser = await User.findOneAndUpdate(
+      { email: session.user.email },
+      { $set: { lastSeen: new Date() } },
+      { new: true }
+    ).select("emailVerified name role");
     if (dbUser) {
       session.user.emailVerified = dbUser.emailVerified ?? false;
     }

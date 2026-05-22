@@ -23,6 +23,7 @@ interface CommsContentProps {
   sendingReply: boolean;
   handleSendUserReply: (e: React.FormEvent) => void;
   currentUserEmail?: string;
+  currentUser?: any;
 }
 
 export default function CommsContent({
@@ -45,6 +46,7 @@ export default function CommsContent({
   sendingReply,
   handleSendUserReply,
   currentUserEmail,
+  currentUser,
 }: CommsContentProps) {
   const [activeTab, setActiveTab] = useState(subCommsTab);
 
@@ -125,6 +127,7 @@ export default function CommsContent({
             loading={dmLoading}
             sending={dmSending}
             onSend={handleSendDM}
+            currentUser={currentUser}
           />
         ) : (
           <SupportTickets

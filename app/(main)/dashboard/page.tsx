@@ -668,7 +668,7 @@ Please get in touch to confirm specifications and begin engineering.`;
   }
 
   return (
-    <div className="min-h-screen pt-32 md:pt-40 pb-20 px-4 md:px-6 relative">
+    <div className="min-h-screen pt-24 md:pt-36 pb-20 px-4 md:px-6 relative">
       <div className="container mx-auto max-w-7xl">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 mb-12">
@@ -898,6 +898,7 @@ Please get in touch to confirm specifications and begin engineering.`;
                   sendingReply={sendingReply}
                   handleSendUserReply={handleSendUserReply}
                   currentUserEmail={user?.email}
+                  currentUser={user}
                 />
               )}
               {activeTab === "community" && (

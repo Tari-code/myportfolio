@@ -76,7 +76,7 @@ export async function GET(req: Request) {
 
       // Fetch user details for each otherUser
       const distinctUserIds = Array.from(userIds);
-      const users = await User.find({ _id: { $in: distinctUserIds } }).select("name email avatar bio");
+      const users = await User.find({ _id: { $in: distinctUserIds } }).select("name email avatar bio lastSeen");
 
       const conversationList = lastMessages.map(lm => {
         const userDetail = users.find(u => u._id.toString() === lm.otherUserId);

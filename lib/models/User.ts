@@ -27,6 +27,7 @@ const UserSchema = new Schema({
     work:   { type: Boolean, default: true },
     posts:  { type: Boolean, default: true },
   },
+  lastSeen: { type: Date, default: null },
 }, { timestamps: true });
 
 const User = models.User || model('User', UserSchema);
