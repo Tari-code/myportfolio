@@ -12,6 +12,8 @@ import CommsContent from "./CommsContent";
 import CommunityContent from "./CommunityContent";
 import NewsContent from "./NewsContent";
 import SecurityContent from "./SecurityContent";
+import OverviewContent from "./OverviewContent";
+import BillingContent from "./BillingContent";
 
 export default function CustomerDashboard() {
   const [user, setUser] = useState<any>(null);
@@ -88,7 +90,7 @@ export default function CustomerDashboard() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Next-Gen social & community messaging hub states
-  const [activeTab, setActiveTab] = useState("playground");
+  const [activeTab, setActiveTab] = useState("overview");
   const [subCommsTab, setSubCommsTab] = useState("dm");
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [dmConversations, setDmConversations] = useState<any[]>([]);
@@ -676,7 +678,7 @@ Please get in touch to confirm specifications and begin engineering.`;
           </div>
         </div>
 
-        <TabSwitcher activeTab={activeTab} setActiveTab={setActiveTab} />
+        <TabSwitcher activeTab={activeTab} setActiveTab={setActiveTab} unreadCount={unreadCount} />
 
         {/* Verification Alert */}
         {!user.emailVerified && (
@@ -734,6 +736,22 @@ Please get in touch to confirm specifications and begin engineering.`;
 
         {/* Main Tab Content */}
         <div className="mt-8">
+          {activeTab === "overview" && (
+            <OverviewContent
+              user={user}
+              tickets={tickets}
+              userNews={userNews}
+              onSwitchTab={setActiveTab}
+            />
+          )}
+          {activeTab === "billing" && (
+            <BillingContent
+              user={user}
+              onUpgradeRequest={(tier) => {
+                fetchUserTickets();
+              }}
+            />
+          )}
           {activeTab === "playground" ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
               <div className="lg:col-span-2">
@@ -885,6 +903,7 @@ Please get in touch to confirm specifications and begin engineering.`;
             </div>
           )}
         </div>
+
 
         {/* Modals */}
         {showSupportModal && (

@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import {
   User, Mail, Shield, Trash2, Search, Filter, CheckCircle2, XCircle,
-  Crown, Zap, Star, Globe, ChevronDown, Key, Monitor, Building2
+  Crown, Zap, Star, Globe, ChevronDown, Key, Monitor, Building2, ExternalLink
 } from "lucide-react";
+import Link from "next/link";
 
 const TIERS = [
   { id: "free",     label: "Free",     color: "text-foreground/50", bg: "bg-foreground/5",      border: "border-card-border",       icon: Globe },
@@ -308,6 +309,13 @@ export default function AdminUsers() {
                   {/* Actions */}
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Link
+                        href={`/admin/user-view/${user._id}`}
+                        title="View User Dashboard"
+                        className="p-2 rounded-lg bg-foreground/5 hover:bg-brand-500/10 text-foreground/40 hover:text-brand-500 transition-all"
+                      >
+                        <ExternalLink size={15} />
+                      </Link>
                       <button
                         onClick={() => handleRoleChange(user._id, user.role)}
                         title={user.role === "admin" ? "Demote to Customer" : "Promote to Admin"}

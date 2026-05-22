@@ -3,7 +3,8 @@ import connectDB from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import PendingUser from "@/lib/models/PendingUser";
 import { hashPassword, login } from "@/lib/auth";
-import { sendOTPEmail } from "@/lib/email";
+import { sendOTPEmail, sendAdminNewUserAlert, sendUserWelcomeEmail } from "@/lib/email";
+import { createNotification } from "@/lib/createNotification";
 
 export async function POST(req: Request) {
   try {
@@ -21,9 +22,8 @@ export async function POST(req: Request) {
 
     const hashedPassword = await hashPassword(password);
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
-    // Create the unverified user directly in the database
     const user = await User.findOneAndUpdate(
       { email },
       { name, email, phone, password: hashedPassword, role, emailVerified: false },
@@ -36,14 +36,25 @@ export async function POST(req: Request) {
       { upsert: true, new: true }
     );
 
-    const emailRes = await sendOTPEmail(email, otp);
-    
-    // Log them in immediately (even though unverified)
+    // Send OTP + welcome email + admin alert (non-blocking)
+    await sendOTPEmail(email, otp);
+    sendUserWelcomeEmail(email, name).catch(() => {});
+    sendAdminNewUserAlert(name, email, "free").catch(() => {});
+
+    // Create welcome notification
+    createNotification({
+      userId: user._id.toString(),
+      type: "welcome",
+      title: "Welcome to Tari Technologies!",
+      message: "Your account is live. Verify your email to unlock full support access.",
+      link: "/dashboard",
+    }).catch(() => {});
+
     const userResponse = { id: user._id.toString(), name: user.name, email: user.email, role: user.role, emailVerified: false };
     await login(userResponse);
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: "OTP sent to your email",
       user: userResponse
     });
