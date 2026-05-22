@@ -6,7 +6,7 @@ import { comparePassword, login } from "@/lib/auth";
 export async function POST(req: Request) {
   try {
     await connectDB();
-    const { email, password } = await req.json();
+    const { email, password, rememberMe } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json({ error: "Missing email or password" }, { status: 400 });
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     }
 
     const userResponse = { id: user._id.toString(), name: user.name, email: user.email, role: user.role, emailVerified: user.emailVerified };
-    await login(userResponse);
+    await login(userResponse, !!rememberMe);
 
     return NextResponse.json({ success: true, user: userResponse });
   } catch (error) {

@@ -9,6 +9,7 @@ import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -30,13 +31,12 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, rememberMe }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        // Short delay before redirecting
         setTimeout(() => {
           if (data.user.role === "admin") {
             router.push("/admin");
@@ -57,7 +57,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-[calc(100vh-80px)] pt-40 relative flex items-center justify-center p-6 py-16 overflow-hidden bg-background">
-      {/* Subtle background blobs */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-brand-500/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px] pointer-events-none" />
 
@@ -90,6 +89,7 @@ export default function LoginPage() {
                 required
                 type="email"
                 value={email}
+                autoComplete="email"
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
                 className="w-full bg-foreground/[0.03] border border-card-border rounded-2xl py-4 pl-12 pr-4 text-foreground placeholder:text-foreground/20 focus:outline-none focus:border-brand-500/50 focus:ring-4 focus:ring-brand-500/10 transition-all"
@@ -100,7 +100,12 @@ export default function LoginPage() {
           <div className="space-y-2">
             <div className="flex justify-between items-center ml-1">
               <label className="text-sm font-bold text-foreground/60 uppercase tracking-wider">Password</label>
-              <Link href="#" className="text-xs text-brand-500 hover:text-brand-400 transition-colors font-bold">Forgot?</Link>
+              <Link
+                href="/customer/forgot-password"
+                className="text-xs text-brand-500 hover:text-brand-400 transition-colors font-bold"
+              >
+                Forgot?
+              </Link>
             </div>
             <div className="relative group">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/20 group-focus-within:text-brand-500 transition-colors">
@@ -110,12 +115,35 @@ export default function LoginPage() {
                 required
                 type="password"
                 value={password}
+                autoComplete="current-password"
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full bg-foreground/[0.03] border border-card-border rounded-2xl py-4 pl-12 pr-4 text-foreground placeholder:text-foreground/20 focus:outline-none focus:border-brand-500/50 focus:ring-4 focus:ring-brand-500/10 transition-all"
               />
             </div>
           </div>
+
+          {/* Remember me */}
+          <label className="flex items-center gap-3 cursor-pointer group select-none">
+            <div className="relative">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-5 h-5 rounded-md border-2 border-card-border bg-foreground/[0.03] peer-checked:bg-brand-600 peer-checked:border-brand-600 transition-all flex items-center justify-center">
+                {rememberMe && (
+                  <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                    <path d="M1 4L4 7L10 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+              </div>
+            </div>
+            <span className="text-sm font-medium text-foreground/60 group-hover:text-foreground/80 transition-colors">
+              Remember me for 30 days
+            </span>
+          </label>
 
           <button
             type="submit"

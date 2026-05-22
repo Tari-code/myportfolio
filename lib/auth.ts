@@ -13,11 +13,11 @@ export async function comparePassword(password: string, hash: string) {
   return await bcrypt.compare(password, hash);
 }
 
-export async function encrypt(payload: any) {
+export async function encrypt(payload: any, expiresIn: string = "2h") {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("2h")
+    .setExpirationTime(expiresIn)
     .sign(key);
 }
 
@@ -28,12 +28,11 @@ export async function decrypt(input: string): Promise<any> {
   return payload;
 }
 
-export async function login(user: any) {
-  // Create the session
-  const expires = new Date(Date.now() + 2 * 60 * 60 * 1000);
-  const session = await encrypt({ user, expires });
-
-  // Save the session in a cookie
+export async function login(user: any, rememberMe = false) {
+  const duration = rememberMe ? 30 * 24 * 60 * 60 * 1000 : 2 * 60 * 60 * 1000;
+  const expiresIn = rememberMe ? "30d" : "2h";
+  const expires = new Date(Date.now() + duration);
+  const session = await encrypt({ user, expires }, expiresIn);
   (await cookies()).set("session", session, { expires, httpOnly: true, secure: process.env.NODE_ENV === "production" });
 }
 
