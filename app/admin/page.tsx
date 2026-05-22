@@ -33,6 +33,11 @@ export default function AdminDashboard() {
   const [soundAlerts, setSoundAlerts] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Broadcast state
+  const [broadcastForm, setBroadcastForm] = useState({ title: "", message: "", link: "" });
+  const [broadcasting, setBroadcasting] = useState(false);
+  const [broadcastResult, setBroadcastResult] = useState<{ sent: number; total: number } | null>(null);
+
   // Live Activity Stream
   const [activityEvents, setActivityEvents] = useState<any[]>([]);
   const [lastEventTime, setLastEventTime] = useState<string | null>(null);
@@ -152,6 +157,32 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Failed to update config", error);
       triggerToast("Error updating persistent operations control settings.");
+    }
+  };
+
+  const handleBroadcast = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!broadcastForm.title || !broadcastForm.message) return;
+    setBroadcasting(true);
+    setBroadcastResult(null);
+    try {
+      const res = await fetch("/api/admin/broadcast", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(broadcastForm),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setBroadcastResult({ sent: data.sent, total: data.total });
+        setBroadcastForm({ title: "", message: "", link: "" });
+        triggerToast(`✓ Broadcast sent to ${data.sent} of ${data.total} users`);
+      } else {
+        triggerToast("Broadcast failed. Try again.");
+      }
+    } catch {
+      triggerToast("Network error during broadcast.");
+    } finally {
+      setBroadcasting(false);
     }
   };
 
@@ -661,6 +692,65 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </div>
+          </section>
+
+          {/* Broadcast Notification Panel */}
+          <section className="glass-panel p-6 md:p-8 rounded-[2rem] border border-card-border bg-gradient-to-tr from-background to-brand-500/[0.02]">
+            <h3 className="text-xl md:text-2xl font-display font-bold text-foreground mb-2 flex items-center gap-3">
+              <Bell size={24} className="text-brand-500" /> Broadcast
+            </h3>
+            <p className="text-xs text-foreground/40 font-bold uppercase tracking-widest mb-6">Send notification to all users</p>
+
+            <form onSubmit={handleBroadcast} className="space-y-3">
+              <div>
+                <label className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest block mb-1.5 ml-1">Title</label>
+                <input
+                  required
+                  value={broadcastForm.title}
+                  onChange={e => setBroadcastForm({ ...broadcastForm, title: e.target.value })}
+                  placeholder="System announcement…"
+                  className="w-full bg-foreground/[0.03] border border-card-border rounded-2xl py-3 px-4 text-sm font-semibold text-foreground placeholder:text-foreground/20 focus:outline-none focus:border-brand-500/50 transition-all"
+                />
+              </div>
+              <div>
+                <label className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest block mb-1.5 ml-1">Message</label>
+                <textarea
+                  required
+                  value={broadcastForm.message}
+                  onChange={e => setBroadcastForm({ ...broadcastForm, message: e.target.value })}
+                  placeholder="Write the notification message…"
+                  rows={3}
+                  className="w-full bg-foreground/[0.03] border border-card-border rounded-2xl py-3 px-4 text-sm font-semibold text-foreground placeholder:text-foreground/20 focus:outline-none focus:border-brand-500/50 transition-all resize-none"
+                />
+              </div>
+              <div>
+                <label className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest block mb-1.5 ml-1">Link (optional)</label>
+                <input
+                  value={broadcastForm.link}
+                  onChange={e => setBroadcastForm({ ...broadcastForm, link: e.target.value })}
+                  placeholder="/dashboard"
+                  className="w-full bg-foreground/[0.03] border border-card-border rounded-2xl py-3 px-4 text-sm font-semibold text-foreground placeholder:text-foreground/20 focus:outline-none focus:border-brand-500/50 transition-all"
+                />
+              </div>
+
+              {broadcastResult && (
+                <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-bold flex items-center gap-2">
+                  <Check size={14} /> Sent to {broadcastResult.sent} / {broadcastResult.total} users
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={broadcasting || !broadcastForm.title || !broadcastForm.message}
+                className="w-full py-3.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm rounded-2xl transition-all disabled:opacity-40 flex items-center justify-center gap-2 active:scale-95 shadow-lg shadow-brand-500/20"
+              >
+                {broadcasting ? (
+                  <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Sending…</>
+                ) : (
+                  <><Bell size={16} /> Send to All Users</>
+                )}
+              </button>
+            </form>
           </section>
 
           {/* Database & Mongoose Diagnostic Telemetry Card */}

@@ -291,7 +291,7 @@ export default function ProfileModal({
 
           {/* POSTS */}
           {activeTab === "posts" && (
-            <div className="space-y-3 animate-in fade-in duration-200">
+            <div className="space-y-4 animate-in fade-in duration-200">
               {loadingPosts ? (
                 <div className="py-12 flex flex-col items-center gap-3">
                   <Loader2 size={24} className="animate-spin text-brand-500" />
@@ -304,18 +304,44 @@ export default function ProfileModal({
                 </div>
               ) : (
                 posts.map(post => (
-                  <div key={post._id} className="p-4 rounded-2xl border border-card-border hover:border-brand-500/20 transition-all group bg-foreground/[0.01]">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[9px] font-bold text-brand-500/70 bg-brand-500/10 border border-brand-500/15 px-2 py-1 rounded-lg uppercase tracking-widest">{post.category}</span>
-                      <span className="text-[9px] text-foreground/25 font-bold">{post.createdAt ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }) : ""}</span>
-                    </div>
-                    <h4 className="font-bold text-sm text-foreground group-hover:text-brand-500 transition-colors mb-1 leading-tight">{post.title}</h4>
-                    {post.summary && <p className="text-xs text-foreground/45 italic">"{post.summary}"</p>}
-                    {(post.likes?.length || 0) > 0 && (
-                      <div className="flex items-center gap-1.5 mt-3 text-[9px] font-bold text-pink-500">
-                        <Heart size={11} className="fill-pink-500" /> {post.likes.length} Likes
+                  <div key={post._id} className="rounded-[1.5rem] border border-card-border hover:border-brand-500/20 transition-all group overflow-hidden bg-foreground/[0.01]">
+                    {/* Post header */}
+                    <div className="flex items-center gap-3 p-4 pb-0">
+                      <div className={`w-9 h-9 rounded-2xl bg-gradient-to-br ${g.avatar} flex items-center justify-center text-xs font-bold text-white shrink-0`}>
+                        {member.avatar ? <img src={member.avatar} alt={member.name} className="w-full h-full object-cover rounded-2xl" /> : initial}
                       </div>
-                    )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm text-foreground">{member.name}</p>
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-foreground/35 uppercase tracking-wider">
+                          <Clock size={9} /> {post.createdAt ? formatDistanceToNow(new Date(post.createdAt)) + " ago" : ""}
+                          <span className="text-brand-500/70">{post.category}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Post content */}
+                    <div className="px-4 py-3 space-y-1.5">
+                      <h4 className="font-bold text-sm text-foreground group-hover:text-brand-500 transition-colors leading-tight">{post.title}</h4>
+                      {post.summary && (
+                        <p className="text-xs text-foreground/55 font-medium leading-relaxed italic border-l-2 border-brand-500/20 pl-3">"{post.summary}"</p>
+                      )}
+                      {post.content && (
+                        <p className="text-xs text-foreground/40 font-medium line-clamp-3 leading-relaxed">{post.content}</p>
+                      )}
+                    </div>
+
+                    {/* Actions row */}
+                    <div className="flex items-center gap-5 px-4 py-3 border-t border-card-border">
+                      <div className="flex items-center gap-1.5 text-foreground/30">
+                        <Heart size={14} className={(post.likes?.length || 0) > 0 ? "fill-pink-500 text-pink-500" : ""} />
+                        <span className="text-[11px] font-bold">{(post.likes?.length || 0) > 0 ? post.likes.length : ""}</span>
+                        <span className="text-[11px] font-bold">Like</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-foreground/30">
+                        <MessageSquare size={14} />
+                        <span className="text-[11px] font-bold">{(post.comments?.length || 0) > 0 ? `${post.comments.length} Comments` : "Comment"}</span>
+                      </div>
+                    </div>
                   </div>
                 ))
               )}

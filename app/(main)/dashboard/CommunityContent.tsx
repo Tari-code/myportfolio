@@ -19,6 +19,14 @@ interface CommunityContentProps {
 
 const CATEGORIES = ["Technology", "AI", "Web Dev", "Design", "Business", "Open Source"];
 
+interface Reply {
+  _id?: string;
+  userId?: string;
+  userName: string;
+  text: string;
+  createdAt?: string;
+}
+
 interface Comment {
   _id?: string;
   userId?: string;
@@ -26,6 +34,8 @@ interface Comment {
   userAvatar?: string;
   text: string;
   createdAt?: string;
+  likes?: string[];
+  replies?: Reply[];
 }
 
 export default function CommunityContent({
@@ -66,6 +76,13 @@ export default function CommunityContent({
   const [hoveringFollow, setHoveringFollow] = useState<string | null>(null);
   const [likes, setLikes] = useState<Record<string, { count: number; liked: boolean }>>({});
   const [likingId, setLikingId] = useState<string | null>(null);
+
+  // Comment like/reply state
+  const [commentLikes, setCommentLikes] = useState<Record<string, { count: number; liked: boolean }>>({});
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyInput, setReplyInput] = useState("");
+  const [submittingReply, setSubmittingReply] = useState(false);
+  const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
 
   useEffect(() => { fetchFeed(); }, []);
   useEffect(() => { if (activeSubTab === "my-posts") fetchMyPosts(); }, [activeSubTab]);
@@ -165,6 +182,44 @@ export default function CommunityContent({
         [postId]: { count: (prev[postId]?.count || 0) + (prev[postId]?.liked ? -1 : 1), liked: !prev[postId]?.liked },
       }));
     } finally { setLikingId(null); }
+  };
+
+  const handleCommentLike = async (commentId: string, postId: string) => {
+    const prev = commentLikes[commentId] || { count: 0, liked: false };
+    setCommentLikes(cl => ({ ...cl, [commentId]: { count: prev.count + (prev.liked ? -1 : 1), liked: !prev.liked } }));
+    try {
+      const res = await fetch("/api/news/comment", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId, commentId, action: "like" }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCommentLikes(cl => ({ ...cl, [commentId]: { count: data.likes, liked: data.liked } }));
+      }
+    } catch {
+      setCommentLikes(cl => ({ ...cl, [commentId]: prev }));
+    }
+  };
+
+  const handleSubmitReply = async (commentId: string, postId: string) => {
+    if (!replyInput.trim()) return;
+    setSubmittingReply(true);
+    try {
+      const res = await fetch("/api/news/comment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId, commentId, text: replyInput.trim(), action: "reply" }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPostComments(prev => prev.map(c =>
+          c._id === commentId ? { ...c, replies: data.replies } : c
+        ));
+        setReplyInput("");
+        setReplyingTo(null);
+      }
+    } catch { } finally { setSubmittingReply(false); }
   };
 
   const handleCompose = async (e: React.FormEvent) => {
@@ -655,22 +710,105 @@ export default function CommunityContent({
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {postComments.map((comment, idx) => (
-                      <div key={comment._id || idx} className="flex gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center text-xs font-bold text-brand-500 shrink-0">
-                          {(comment.userName || "?")[0].toUpperCase()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="bg-foreground/[0.05] border border-card-border rounded-2xl rounded-tl-md px-4 py-3">
-                            <p className="text-xs font-bold text-foreground mb-1">{comment.userName}</p>
-                            <p className="text-sm text-foreground/80 leading-relaxed">{comment.text}</p>
+                    {postComments.map((comment, idx) => {
+                      const cid = comment._id || String(idx);
+                      const cLike = commentLikes[cid] || { count: (comment.likes || []).length, liked: false };
+                      const replies = comment.replies || [];
+                      const showReplies = expandedReplies.has(cid);
+                      return (
+                        <div key={cid} className="flex gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center text-xs font-bold text-brand-500 shrink-0 mt-0.5">
+                            {(comment.userName || "?")[0].toUpperCase()}
                           </div>
-                          <p className="text-[10px] text-foreground/30 font-semibold mt-1 px-1">
-                            {comment.createdAt ? formatDistanceToNow(new Date(comment.createdAt)) + " ago" : "just now"}
-                          </p>
+                          <div className="flex-1 min-w-0">
+                            <div className="bg-foreground/[0.05] border border-card-border rounded-2xl rounded-tl-md px-4 py-3">
+                              <p className="text-xs font-bold text-foreground mb-1">{comment.userName}</p>
+                              <p className="text-sm text-foreground/80 leading-relaxed">{comment.text}</p>
+                            </div>
+                            {/* Like · Reply · timestamp row */}
+                            <div className="flex items-center gap-4 mt-1.5 px-1">
+                              <span className="text-[10px] text-foreground/25 font-semibold">
+                                {comment.createdAt ? formatDistanceToNow(new Date(comment.createdAt)) + " ago" : "just now"}
+                              </span>
+                              <button
+                                onClick={() => comment._id && handleCommentLike(comment._id, openPost!._id)}
+                                className={`text-[11px] font-bold transition-colors flex items-center gap-1 ${cLike.liked ? "text-pink-500" : "text-foreground/35 hover:text-pink-400"}`}
+                              >
+                                <Heart size={11} className={cLike.liked ? "fill-pink-500" : ""} />
+                                {cLike.count > 0 ? cLike.count : ""} Like
+                              </button>
+                              <button
+                                onClick={() => setReplyingTo(replyingTo === cid ? null : cid)}
+                                className="text-[11px] font-bold text-foreground/35 hover:text-brand-500 transition-colors"
+                              >
+                                Reply
+                              </button>
+                              {replies.length > 0 && (
+                                <button
+                                  onClick={() => setExpandedReplies(prev => {
+                                    const s = new Set(prev);
+                                    s.has(cid) ? s.delete(cid) : s.add(cid);
+                                    return s;
+                                  })}
+                                  className="text-[11px] font-bold text-brand-500/70 hover:text-brand-500 transition-colors"
+                                >
+                                  {showReplies ? "▲ Hide" : `▼ ${replies.length} Repl${replies.length === 1 ? "y" : "ies"}`}
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Replies list */}
+                            {showReplies && replies.length > 0 && (
+                              <div className="mt-2 ml-4 space-y-2 border-l-2 border-brand-500/15 pl-3">
+                                {replies.map((reply, ri) => (
+                                  <div key={reply._id || ri} className="flex gap-2">
+                                    <div className="w-6 h-6 rounded-lg bg-purple-500/20 flex items-center justify-center text-[10px] font-bold text-purple-400 shrink-0">
+                                      {(reply.userName || "?")[0].toUpperCase()}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="bg-foreground/[0.04] border border-card-border rounded-xl rounded-tl-sm px-3 py-2">
+                                        <p className="text-[11px] font-bold text-foreground mb-0.5">{reply.userName}</p>
+                                        <p className="text-xs text-foreground/70 leading-relaxed">{reply.text}</p>
+                                      </div>
+                                      <p className="text-[9px] text-foreground/25 font-semibold mt-0.5 px-1">
+                                        {reply.createdAt ? formatDistanceToNow(new Date(reply.createdAt)) + " ago" : "just now"}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Reply input */}
+                            {replyingTo === cid && (
+                              <div className="mt-2 ml-1 flex gap-2 items-center animate-in slide-in-from-top-1 duration-200">
+                                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center text-[10px] font-bold text-brand-500 shrink-0">
+                                  {(currentUser?.name || "?")[0].toUpperCase()}
+                                </div>
+                                <div className="flex-1 bg-foreground/[0.05] border border-brand-500/30 rounded-[1.5rem] px-3 py-2 focus-within:border-brand-500/60 transition-all flex items-center gap-2">
+                                  <input
+                                    autoFocus
+                                    type="text"
+                                    value={replyInput}
+                                    onChange={e => setReplyInput(e.target.value)}
+                                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (comment._id) handleSubmitReply(comment._id, openPost!._id); } }}
+                                    placeholder={`Reply to ${comment.userName}…`}
+                                    className="flex-1 bg-transparent text-xs text-foreground placeholder:text-foreground/25 focus:outline-none font-medium"
+                                  />
+                                  <button
+                                    onClick={() => comment._id && handleSubmitReply(comment._id, openPost!._id)}
+                                    disabled={!replyInput.trim() || submittingReply}
+                                    className="w-6 h-6 rounded-full bg-brand-500 flex items-center justify-center text-white disabled:opacity-30 transition-all active:scale-95 shrink-0"
+                                  >
+                                    {submittingReply ? <Loader2 size={10} className="animate-spin" /> : <Send size={10} className="ml-0.5" />}
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

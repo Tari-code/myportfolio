@@ -16,7 +16,17 @@ const UserSchema = new Schema({
   apiKey: { type: String, default: null },
   company: { type: String, default: '' },
   website: { type: String, default: '' },
+  github: { type: String, default: '' },
+  twitter: { type: String, default: '' },
+  location: { type: String, default: '' },
   industry: { type: String, default: '' },
+  profileVisibility: {
+    bio:    { type: Boolean, default: true },
+    skills: { type: Boolean, default: true },
+    links:  { type: Boolean, default: true },
+    work:   { type: Boolean, default: true },
+    posts:  { type: Boolean, default: true },
+  },
 }, { timestamps: true });
 
 const User = models.User || model('User', UserSchema);
