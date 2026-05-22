@@ -8,6 +8,7 @@ import News from "@/lib/models/News";
 import Review from "@/lib/models/Review";
 import Visit from "@/lib/models/Visit";
 import Message from "@/lib/models/Message";
+import Session from "@/lib/models/Session";
 
 export async function GET() {
   try {
@@ -23,6 +24,31 @@ export async function GET() {
     const pendingNewsCount = await News.countDocuments({ isApproved: false });
     const pendingReviews = await Review.countDocuments({ isApproved: false });
     const totalDMs = await Message.countDocuments();
+
+    // Client Intelligence
+    const tierCounts = await User.aggregate([
+      { $group: { _id: { $ifNull: ["$tier", "free"] }, count: { $sum: 1 } } }
+    ]);
+    const tierMap: Record<string, number> = { free: 0, pro: 0, elite: 0, business: 0 };
+    tierCounts.forEach((t: any) => { if (t._id in tierMap) tierMap[t._id] = t.count; });
+
+    const activeSessions = await Session.countDocuments({ isRevoked: false });
+    const apiKeyUsers = await User.countDocuments({ apiKey: { $exists: true, $ne: null } });
+    const recentActiveUsers = await Session.aggregate([
+      { $match: { isRevoked: false } },
+      { $sort: { lastActive: -1 } },
+      { $group: { _id: "$userId", lastActive: { $first: "$lastActive" }, userAgent: { $first: "$userAgent" }, ip: { $first: "$ip" }, city: { $first: "$city" }, country: { $first: "$country" } } },
+      { $sort: { lastActive: -1 } },
+      { $limit: 8 },
+    ]);
+    const activeUserIds = recentActiveUsers.map((u: any) => u._id);
+    const activeUserDocs = await User.find({ _id: { $in: activeUserIds } }, 'name email tier');
+    const activeUserMap: Record<string, any> = {};
+    activeUserDocs.forEach((u: any) => { activeUserMap[u._id.toString()] = u; });
+    const recentActivity = recentActiveUsers.map((s: any) => ({
+      ...s,
+      user: activeUserMap[s._id?.toString()] || null,
+    }));
 
     // Recent Activity (combine from different collections)
     const recentTickets = await Ticket.find().sort({ createdAt: -1 }).limit(5);
@@ -95,7 +121,13 @@ export async function GET() {
       activities,
       liveSupport,
       pendingNews,
-      traffic
+      traffic,
+      clientIntel: {
+        tierMap,
+        activeSessions,
+        apiKeyUsers,
+        recentActivity,
+      },
     });
   } catch (error) {
     console.error("Dashboard stats error:", error);

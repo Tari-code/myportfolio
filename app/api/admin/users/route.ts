@@ -53,12 +53,16 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id, role } = await req.json();
-    if (!id || !role) {
-      return NextResponse.json({ error: "ID and role are required" }, { status: 400 });
+    const { id, role, tier } = await req.json();
+    if (!id || (!role && !tier)) {
+      return NextResponse.json({ error: "ID and at least one field (role or tier) are required" }, { status: 400 });
     }
 
-    await User.findByIdAndUpdate(id, { role });
+    const update: Record<string, string> = {};
+    if (role) update.role = role;
+    if (tier) update.tier = tier;
+
+    await User.findByIdAndUpdate(id, update);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Update user role error:", error);

@@ -7,7 +7,7 @@ import {
   Server, Database, Globe, ArrowUpRight, Newspaper, UserPlus, Clock, X,
   Check, Trash2, Sliders, Volume2, Bot, Play, Pause, Bell, Terminal, Cpu,
   Zap as ZapIcon, Sparkles, Activity as ActivityIcon,
-  Waves
+  Waves, Crown, Monitor, Key
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
@@ -320,6 +320,107 @@ export default function AdminDashboard() {
            </div>
          ))}
        </div>
+
+       {/* Client Intelligence Section */}
+       {data.clientIntel && (
+         <section className="space-y-6">
+           <div className="flex items-center gap-3">
+             <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+               <Users size={18} className="text-white" />
+             </div>
+             <div>
+               <h2 className="text-xl font-bold text-foreground">Client Intelligence</h2>
+               <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-widest">Live account tier and session overview</p>
+             </div>
+             <Link href="/admin/users" className="ml-auto text-xs font-bold text-brand-500 hover:underline">Manage Users →</Link>
+           </div>
+
+           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+             {/* Tier Distribution */}
+             <div className="glass-panel p-6 rounded-[2rem] border border-card-border">
+               <h3 className="text-sm font-bold text-foreground mb-5 flex items-center gap-2">
+                 <Crown size={16} className="text-amber-400" /> Tier Distribution
+               </h3>
+               {[
+                 { id: "free",     label: "Free",     color: "bg-foreground/20", text: "text-foreground/50" },
+                 { id: "pro",      label: "Pro",      color: "bg-blue-500",      text: "text-blue-400" },
+                 { id: "elite",    label: "Elite",    color: "bg-purple-500",    text: "text-purple-400" },
+                 { id: "business", label: "Business", color: "bg-amber-500",     text: "text-amber-400" },
+               ].map(t => {
+                 const count = data.clientIntel.tierMap[t.id] || 0;
+                 const total = data.stats.users || 1;
+                 const pct = Math.round((count / total) * 100);
+                 return (
+                   <div key={t.id} className="mb-4">
+                     <div className="flex items-center justify-between mb-1.5">
+                       <span className={`text-[10px] font-black uppercase tracking-widest ${t.text}`}>{t.label}</span>
+                       <span className="text-xs font-bold text-foreground/50">{count} <span className="text-foreground/25 font-medium">({pct}%)</span></span>
+                     </div>
+                     <div className="h-1.5 w-full bg-foreground/5 rounded-full overflow-hidden">
+                       <div className={`h-full ${t.color} rounded-full transition-all duration-700`} style={{ width: `${pct}%` }} />
+                     </div>
+                   </div>
+                 );
+               })}
+             </div>
+
+             {/* Session & API Stats */}
+             <div className="glass-panel p-6 rounded-[2rem] border border-card-border space-y-4">
+               <h3 className="text-sm font-bold text-foreground mb-2 flex items-center gap-2">
+                 <Shield size={16} className="text-green-400" /> Live Metrics
+               </h3>
+               {[
+                 { label: "Active Sessions",  value: data.clientIntel.activeSessions,  icon: Monitor,  color: "text-green-400", bg: "bg-green-500/10", border: "border-green-500/20" },
+                 { label: "API Key Holders",  value: data.clientIntel.apiKeyUsers,     icon: Key,      color: "text-indigo-400", bg: "bg-indigo-500/10", border: "border-indigo-500/20" },
+                 { label: "Paid Accounts",    value: (data.clientIntel.tierMap.pro || 0) + (data.clientIntel.tierMap.elite || 0) + (data.clientIntel.tierMap.business || 0), icon: Zap, color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20" },
+               ].map(m => {
+                 const MIcon = m.icon;
+                 return (
+                   <div key={m.label} className={`flex items-center justify-between p-4 rounded-2xl border ${m.bg} ${m.border}`}>
+                     <div className="flex items-center gap-3">
+                       <MIcon size={16} className={m.color} />
+                       <span className="text-xs font-bold text-foreground/60">{m.label}</span>
+                     </div>
+                     <span className={`text-xl font-display font-bold ${m.color}`}>{m.value}</span>
+                   </div>
+                 );
+               })}
+             </div>
+
+             {/* Recently Active Users */}
+             <div className="glass-panel p-6 rounded-[2rem] border border-card-border">
+               <h3 className="text-sm font-bold text-foreground mb-5 flex items-center gap-2">
+                 <Activity size={16} className="text-brand-500" /> Recently Active
+               </h3>
+               <div className="space-y-3">
+                 {data.clientIntel.recentActivity.length === 0 ? (
+                   <p className="text-xs text-foreground/25 italic font-medium text-center py-4">No active sessions yet.</p>
+                 ) : (
+                   data.clientIntel.recentActivity.map((s: any, i: number) => {
+                     const tierColors: Record<string, string> = { pro: "text-blue-400 bg-blue-500/10 border-blue-500/20", elite: "text-purple-400 bg-purple-500/10 border-purple-500/20", business: "text-amber-400 bg-amber-500/10 border-amber-500/20", free: "text-foreground/30 bg-foreground/5 border-card-border" };
+                     const tier = s.user?.tier || "free";
+                     const tc = tierColors[tier] || tierColors.free;
+                     const location = [s.city, s.country].filter(Boolean).join(", ") || s.ip || "—";
+                     return (
+                       <div key={i} className="flex items-center gap-3">
+                         <div className="w-8 h-8 rounded-xl bg-brand-500/10 flex items-center justify-center text-brand-500 font-bold text-xs shrink-0">
+                           {s.user?.name?.charAt(0)?.toUpperCase() || "?"}
+                         </div>
+                         <div className="flex-1 min-w-0">
+                           <p className="text-xs font-bold text-foreground truncate">{s.user?.name || "Unknown"}</p>
+                           <p className="text-[10px] text-foreground/30 font-medium truncate">{location}</p>
+                         </div>
+                         <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${tc}`}>{tier}</span>
+                       </div>
+                     );
+                   })
+                 )}
+               </div>
+             </div>
+           </div>
+         </section>
+       )}
 
        {/* Traffic Diagnostics Header & Grid */}
        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 relative overflow-hidden">
