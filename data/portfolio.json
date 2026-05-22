@@ -1,0 +1,182 @@
+[
+  {
+    "id": "1",
+    "title": "FinTech Dashboard",
+    "slug": "fintech-dashboard",
+    "category": "Web Application",
+    "description": "A comprehensive financial dashboard with real-time analytics.",
+    "fullDescription": "A robust financial dashboard built for a leading FinTech startup. It features real-time analytics, user transaction management, and an interactive charting system using Recharts. The backend is powered by Next.js API routes and Prisma, ensuring fast and secure data retrieval.\nA robust financial dashboard built for a leading FinTech startup. It features real-time analytics, user transaction management, and an interactive charting system using Recharts. The backend is powered by Next.js API routes and Prisma, ensuring fast and secure data retrieval.",
+    "imageUrl": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
+    "projectUrl": "https://example.com/fintech",
+    "client": "Acme Finance",
+    "duration": "3 months",
+    "tags": [
+      "Next.js",
+      "React",
+      "Tailwind CSS",
+      "Prisma"
+    ]
+  },
+  {
+    "id": "2",
+    "title": "E-commerce Platform",
+    "slug": "ecommerce-platform",
+    "category": "E-Commerce",
+    "description": "A high-conversion e-commerce platform with seamless payment integration.",
+    "fullDescription": "This enterprise e-commerce platform handles thousands of daily transactions. We integrated Stripe for seamless payments, implemented a robust inventory syncing system with Node.js, and built a lightning-fast React frontend that optimized mobile conversion rates by 40%.",
+    "imageUrl": "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80",
+    "projectUrl": "https://example.com/ecommerce",
+    "client": "StyleHub",
+    "duration": "4 months",
+    "tags": [
+      "React",
+      "Node.js",
+      "Stripe",
+      "PostgreSQL"
+    ]
+  },
+  {
+    "id": "3",
+    "title": "Healthcare Portal",
+    "slug": "healthcare-portal",
+    "category": "Enterprise Software",
+    "description": "Secure patient portal for managing appointments and telehealth sessions.",
+    "fullDescription": "A fully HIPAA-compliant healthcare portal allowing patients to schedule appointments, view medical records, and conduct high-quality WebRTC telehealth sessions directly within their browser.",
+    "imageUrl": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80",
+    "projectUrl": "https://example.com/healthcare",
+    "client": "MediCare Plus",
+    "duration": "6 months",
+    "tags": [
+      "Vue.js",
+      "Django",
+      "PostgreSQL",
+      "WebRTC"
+    ]
+  },
+  {
+    "id": "4",
+    "title": "AI Content Generator",
+    "slug": "ai-content-generator",
+    "category": "AI Agents",
+    "description": "An intelligent writing assistant powered by LLMs for automated content creation.",
+    "fullDescription": "Leveraging the OpenAI API, we built an intelligent content generator that helps marketing teams draft SEO-optimized articles, social media posts, and ad copy in seconds. The UI is built with Next.js and Tailwind CSS.",
+    "imageUrl": "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80",
+    "projectUrl": "https://example.com/ai",
+    "client": "ContentNova",
+    "duration": "2 months",
+    "tags": [
+      "OpenAI",
+      "Next.js",
+      "Tailwind CSS",
+      "Redis"
+    ]
+  },
+  {
+    "id": "5",
+    "title": "Real Estate Explorer",
+    "slug": "real-estate-explorer",
+    "category": "Web Application",
+    "description": "Interactive property exploration tool with 3D tours.",
+    "fullDescription": "A sophisticated real estate platform that allows users to explore properties via 3D virtual tours built with Three.js. Includes advanced filtering, dynamic pricing models, and neighborhood data integration.",
+    "imageUrl": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80",
+    "projectUrl": "https://example.com/real-estate",
+    "client": "UrbanNest",
+    "duration": "5 months",
+    "tags": [
+      "React",
+      "Three.js",
+      "Express",
+      "MongoDB"
+    ]
+  },
+  {
+    "id": "6",
+    "title": "Crypto Wallet App",
+    "slug": "crypto-wallet",
+    "category": "Mobile App",
+    "description": "Cross-platform mobile application for secure cryptocurrency storage.",
+    "fullDescription": "A React Native crypto wallet that interfaces directly with Ethereum smart contracts via Web3.js. Features biometric authentication, real-time market data via GraphQL, and secure multi-sig capabilities.",
+    "imageUrl": "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=800&q=80",
+    "projectUrl": "https://example.com/crypto",
+    "client": "BlockSafe",
+    "duration": "4 months",
+    "tags": [
+      "React Native",
+      "Web3.js",
+      "Solidity",
+      "GraphQL"
+    ]
+  },
+  {
+    "id": "7",
+    "title": "SaaS Analytics CRM",
+    "slug": "saas-crm",
+    "category": "Enterprise Software",
+    "description": "B2B CRM tailored for SaaS companies to track customer health.",
+    "fullDescription": "A highly customized CRM built specifically for SaaS vendors. It aggregates product usage data to calculate customer health scores, predicts churn risk using basic machine learning models, and integrates with major email providers.",
+    "imageUrl": "https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&q=80",
+    "projectUrl": "https://example.com/crm",
+    "client": "SaaSFlow",
+    "duration": "6 months",
+    "tags": [
+      "Vue 3",
+      "Laravel",
+      "MySQL",
+      "Docker"
+    ]
+  },
+  {
+    "id": "8",
+    "title": "Fitness Tracking Platform",
+    "slug": "fitness-tracking",
+    "category": "Web Application",
+    "description": "Social fitness platform for creating routines and tracking progress.",
+    "fullDescription": "A gamified fitness application built with SvelteKit and Supabase. Users can log workouts, participate in community challenges, and view their progress on interactive leaderboards. Real-time updates ensure highly engaging user experiences.",
+    "imageUrl": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80",
+    "projectUrl": "https://example.com/fitness",
+    "client": "FitConnect",
+    "duration": "3 months",
+    "tags": [
+      "SvelteKit",
+      "Supabase",
+      "Tailwind CSS",
+      "Vercel"
+    ]
+  },
+  {
+    "id": "9",
+    "title": "Cloud Infrastructure Automation",
+    "slug": "cloud-automation",
+    "category": "Cloud Infra",
+    "description": "Automated deployment pipeline and infrastructure-as-code solution.",
+    "fullDescription": "We designed and implemented a scalable, multi-region AWS infrastructure using Terraform and Kubernetes. The project reduced deployment times by 70% and significantly improved system reliability under high load for a major financial institution.",
+    "imageUrl": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80",
+    "projectUrl": "https://example.com/cloud",
+    "client": "Global Bank",
+    "duration": "5 months",
+    "tags": [
+      "Terraform",
+      "AWS",
+      "Kubernetes",
+      "GitHub Actions"
+    ]
+  },
+  {
+    "id": "10",
+    "title": "EdTech Learning Management",
+    "slug": "edtech-lms",
+    "category": "Web Application",
+    "description": "Interactive learning platform with video streaming and quizzes.",
+    "fullDescription": "A robust Learning Management System (LMS) serving thousands of concurrent students. Features include encrypted video streaming, real-time quiz evaluations via WebSockets, and a detailed instructor analytics dashboard.",
+    "imageUrl": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80",
+    "projectUrl": "https://example.com/edtech",
+    "client": "EduPro",
+    "duration": "7 months",
+    "tags": [
+      "Next.js",
+      "NestJS",
+      "PostgreSQL",
+      "Socket.io"
+    ]
+  }
+]

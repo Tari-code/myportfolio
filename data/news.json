@@ -1,0 +1,50 @@
+[
+  {
+    "id": "1",
+    "title": "The Rise of Next-Generation AI Agents",
+    "slug": "rise-of-next-gen-ai-agents",
+    "category": "Artificial Intelligence",
+    "summary": "How autonomous AI agents are moving beyond chatbots to executing complex workflows.",
+    "content": "Artificial Intelligence is experiencing a massive paradigm shift. Instead of conversational agents that simply answer questions, the tech industry is pivoting toward autonomous AI agents. These agents can understand complex goals, break them down into multi-step workflows, and execute them across various applications.\n\nFrom booking flights to managing software deployments, autonomous agents act as digital employees. Major players in the tech industry are investing heavily in agentic workflows, believing this will define the next decade of software. The transition requires robust APIs, advanced reasoning models, and new security paradigms to ensure these agents operate safely within enterprise environments.",
+    "imageUrl": "/uploads/1778338075088_Screenshot_2025-06-16_203201.png",
+    "author": "Tech Insights Team",
+    "date": "2026-05-08T10:00:00Z",
+    "tags": [
+      "AI",
+      "Automation",
+      "Future Tech"
+    ]
+  },
+  {
+    "id": "2",
+    "title": "Web3 Meets Enterprise Architecture",
+    "slug": "web3-meets-enterprise-architecture",
+    "category": "Blockchain",
+    "summary": "Enterprises are adopting blockchain technologies to secure supply chains and data.",
+    "content": "For years, Web3 and blockchain have been heavily associated with cryptocurrencies. However, enterprise architecture is finally adopting the underlying technology. Major logistics and supply chain companies are utilizing decentralized ledgers to ensure transparent, tamper-proof tracking of goods globally.\n\nThis shift brings new challenges, particularly in scalability and regulatory compliance. Companies are increasingly turning to private blockchains and Layer 2 solutions to handle the high throughput required for global operations, integrating these modern architectures with legacy ERP systems.",
+    "imageUrl": "https://images.unsplash.com/photo-1639762681485-074b7f4f20f1?w=800&q=80",
+    "author": "Blockchain Daily",
+    "date": "2026-05-05T14:30:00Z",
+    "tags": [
+      "Web3",
+      "Enterprise",
+      "Blockchain"
+    ]
+  },
+  {
+    "id": "3",
+    "title": "Quantum Computing Reaches New Milestones",
+    "slug": "quantum-computing-milestones",
+    "category": "Computing",
+    "summary": "Recent breakthroughs in qubit stability bring commercial quantum computing closer.",
+    "content": "Researchers have announced a significant breakthrough in maintaining qubit stability at higher temperatures, drastically reducing the cooling requirements for quantum computers. This development marks a vital step toward commercializing quantum technology.\n\nWhile we are still years away from quantum smartphones, industries heavily reliant on complex simulations—such as pharmaceuticals, materials science, and cryptography—are already preparing for the quantum leap. Startups are offering cloud-based quantum access, allowing enterprise developers to experiment with quantum algorithms today.",
+    "imageUrl": "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&q=80",
+    "author": "Quantum Labs",
+    "date": "2026-05-01T09:15:00Z",
+    "tags": [
+      "Quantum",
+      "Hardware",
+      "Research"
+    ]
+  }
+]

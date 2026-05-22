@@ -1,0 +1,51 @@
+- [ ] Add state hooks (activeTab, subCommsTab, viewingProfile, communitySearch) to `app/(main)/dashboard/page.tsx`
+  - [ ] Define `activeTab` state with default "playground"
+  - [ ] Define `subCommsTab` state with default "dm"
+  - [ ] Define `viewingProfile` state for selected user profile
+  - [ ] Define `communitySearch` state for search input
+  - [ ] Update relevant imports and type definitions
+- [ ] Insert Tab Switcher component before main grid
+  - [ ] Create `TabSwitcher` component with tabs: Playground, Comms, Community, News
+  - [ ] Wire `setActiveTab` to tab clicks
+  - [ ] Add responsive layout for mobile (dropdown)
+- [ ] Refactor main grid layout to conditional columns based on activeTab
+  - [ ] Use CSS grid utilities to show/hide columns
+  - [ ] Ensure smooth transition animations
+- [ ] Create sub‑components: PlaygroundContent, CommsContent, CommunityContent, NewsContent
+  - [ ] Scaffold files under `app/(main)/dashboard/` directory
+  - [ ] Export default components with placeholder UI
+  - [ ] Add Tailwind glass‑panel styling
+- [ ] Implement CommsContent with DM and Support sub‑tabs, mobile full‑screen handling
+  - [ ] Add internal tab state (`subCommsTab`)
+  - [ ] Render `DirectDMs` when DM tab active
+  - [ ] Render `SupportTickets` when Support tab active
+  - [ ] Add mobile back button to return to main grid
+- [ ] Add DirectDMs component with responsive list/chat panes and back button
+  - [ ] Build UI for conversation list and message pane
+  - [ ] Implement lazy loading of messages
+  - [ ] Add back navigation for small screens
+- [ ] Add SupportTickets component (already existing but adjust classes for mobile)
+  - [ ] Refactor existing component to use glass‑panel classes
+  - [ ] Ensure scrollable ticket list on mobile
+- [ ] Build CommunityCard component in `components/CommunityCard.tsx`
+  - [ ] Design card with avatar, name, follow button, and stats
+  - [ ] Add hover micro‑animation
+  - [ ] Export for use in `CommunityContent`
+- [ ] Build ProfileModal component in `components/ProfileModal.tsx`
+  - [ ] Modal shows user bio, skills, follower/following counts
+  - [ ] Include follow/unfollow button
+  - [ ] Animate entrance/exit
+- [ ] Render ProfileModal conditionally in dashboard page
+  - [ ] Open modal when clicking a user card
+  - [ ] Pass selected user data via `viewingProfile`
+- [ ] Update admin users page to show bio, skills, follower/following counts
+  - [ ] Extend admin table columns
+  - [ ] Fetch additional fields from API
+- [ ] Ensure all new UI uses glass‑panel, gradients, and Tailwind design tokens
+  - [ ] Create/design system tokens in `styles/theme.css`
+  - [ ] Apply consistent classes across components
+- [ ] Run TypeScript compile and lint, fix any errors
+  - [ ] `npm run lint` and address warnings
+- [ ] Manual UI verification of responsive behavior
+  - [ ] Test on desktop, tablet, mobile breakpoints
+  - [ ] Verify animations and dark mode
