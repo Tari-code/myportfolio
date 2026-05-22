@@ -13,6 +13,14 @@ const NewsSchema = new Schema({
   isApproved: { type: Boolean, default: false },
   submittedBy: { type: Schema.Types.ObjectId, ref: 'User' },
   likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  comments: [{
+    userId: { type: Schema.Types.ObjectId, ref: 'User' },
+    userName: { type: String, required: true },
+    userAvatar: { type: String, default: "" },
+    text: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now },
+  }],
+  shares: { type: Number, default: 0 },
 }, { timestamps: true });
 
 const News = models.News || model('News', NewsSchema);

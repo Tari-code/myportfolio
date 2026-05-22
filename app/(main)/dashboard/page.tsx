@@ -14,6 +14,7 @@ import NewsContent from "./NewsContent";
 import SecurityContent from "./SecurityContent";
 import OverviewContent from "./OverviewContent";
 import BillingContent from "./BillingContent";
+import NotificationsContent from "./NotificationsContent";
 
 export default function CustomerDashboard() {
   const [user, setUser] = useState<any>(null);
@@ -89,6 +90,9 @@ export default function CustomerDashboard() {
   const [sendingReply, setSendingReply] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Notifications badge count
+  const [notifCount, setNotifCount] = useState(0);
+
   // Next-Gen social & community messaging hub states
   const [activeTab, setActiveTab] = useState("overview");
   const [subCommsTab, setSubCommsTab] = useState("dm");
@@ -131,11 +135,23 @@ export default function CustomerDashboard() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [activeTicket?._id, activeTicket?.replies?.length]);
 
+  const fetchNotifCount = async () => {
+    try {
+      const res = await fetch("/api/notifications");
+      if (res.ok) {
+        const data = await res.json();
+        setNotifCount(data.unreadCount || 0);
+      }
+    } catch { }
+  };
+
   useEffect(() => {
     fetchDashboardData();
     checkOperationsConfig();
+    fetchNotifCount();
     const configInterval = setInterval(checkOperationsConfig, 4000);
-    return () => clearInterval(configInterval);
+    const notifInterval = setInterval(fetchNotifCount, 20000);
+    return () => { clearInterval(configInterval); clearInterval(notifInterval); };
   }, []);
 
   const checkOperationsConfig = async () => {
@@ -677,7 +693,7 @@ Please get in touch to confirm specifications and begin engineering.`;
           </div>
         </div>
 
-        <TabSwitcher activeTab={activeTab} setActiveTab={setActiveTab} unreadCount={unreadCount} />
+        <TabSwitcher activeTab={activeTab} setActiveTab={(tab) => { setActiveTab(tab); if (tab === "notifications") setTimeout(fetchNotifCount, 1000); }} unreadCount={unreadCount} notifCount={notifCount} />
 
         {/* Verification Alert */}
         {!user.emailVerified && (
@@ -742,6 +758,9 @@ Please get in touch to confirm specifications and begin engineering.`;
               userNews={userNews}
               onSwitchTab={setActiveTab}
             />
+          )}
+          {activeTab === "notifications" && (
+            <NotificationsContent />
           )}
           {activeTab === "billing" && (
             <BillingContent
@@ -876,6 +895,7 @@ Please get in touch to confirm specifications and begin engineering.`;
                   setReplyText={setReplyText}
                   sendingReply={sendingReply}
                   handleSendUserReply={handleSendUserReply}
+                  currentUserEmail={user?.email}
                 />
               )}
               {activeTab === "community" && (
