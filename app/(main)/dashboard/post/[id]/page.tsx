@@ -206,19 +206,15 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   return (
-    <div className="min-h-screen pt-16 md:pt-24 pb-24">
+    <div className="min-h-screen pt-20 md:pt-24 pb-24">
       {/* Sticky header */}
-      <div className="sticky top-16 md:top-24 z-40 bg-background/80 backdrop-blur-xl border-b border-card-border px-4 md:px-6 py-3 flex items-center gap-3">
+      <div className="sticky top-16 md:top-24 z-40 bg-background/80 backdrop-blur-xl border-b border-card-border px-4 md:px-6 py-3 flex items-center justify-between">
         <button
           onClick={() => router.back()}
           className="p-2 rounded-xl hover:bg-foreground/10 text-foreground/60 transition-all -ml-1"
         >
           <ArrowLeft size={20} />
         </button>
-        <div className="flex-1 min-w-0">
-          <p className="font-bold text-sm text-foreground truncate">{post.title}</p>
-          <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-wider">{post.category}</p>
-        </div>
         <button onClick={handleShare} className="p-2 rounded-xl hover:bg-foreground/10 text-foreground/60 transition-all">
           {copied ? <Check size={18} className="text-green-500" /> : <Share2 size={18} />}
         </button>
