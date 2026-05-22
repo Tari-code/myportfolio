@@ -330,17 +330,16 @@ export default function CustomerDashboard() {
         body: JSON.stringify({ action: "follow", targetUserId })
       });
       if (res.ok) {
+        const data = await res.json();
+        // Update current user's following list immediately so isFollowing is accurate
+        setUser((prev: any) => prev ? { ...prev, following: data.following } : prev);
+        // Refresh member list
         const usersRes = await fetch("/api/users");
-        if (usersRes.ok) {
-          const data = await usersRes.json();
-          setAllUsers(data);
-        }
+        if (usersRes.ok) setAllUsers(await usersRes.json());
+        // Refresh profile modal if open on this user
         if (viewingProfile && viewingProfile._id === targetUserId) {
-          const singleUserRes = await fetch(`/api/users?id=${targetUserId}`);
-          if (singleUserRes.ok) {
-            const singleUserData = await singleUserRes.json();
-            setViewingProfile(singleUserData);
-          }
+          const singleRes = await fetch(`/api/users?id=${targetUserId}`);
+          if (singleRes.ok) setViewingProfile(await singleRes.json());
         }
       }
     } catch (err) {

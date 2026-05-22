@@ -12,6 +12,7 @@ const NewsSchema = new Schema({
   readTime: { type: String, default: "5 min read" },
   isApproved: { type: Boolean, default: false },
   submittedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+  likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
 }, { timestamps: true });
 
 const News = models.News || model('News', NewsSchema);

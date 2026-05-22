@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import {
   Search, Users, Activity, MessageSquare, Heart, Share2, Clock, Pencil,
-  Trash2, X, Loader2, CheckCircle2, ShieldCheck, PlusCircle, Send, ChevronDown, Tag
+  Trash2, X, Loader2, CheckCircle2, ShieldCheck, PlusCircle, Send, ChevronDown,
+  UserPlus, UserCheck, Zap
 } from "lucide-react";
 import CommunityCard from "./CommunityCard";
 import ProfileModal from "./ProfileModal";
@@ -24,7 +25,7 @@ export default function CommunityContent({
   onFollow,
   onMessage,
 }: CommunityContentProps) {
-  const [activeSubTab, setActiveSubTab] = useState<"members" | "feed" | "my-posts">("members");
+  const [activeSubTab, setActiveSubTab] = useState<"feed" | "members" | "my-posts">("feed");
   const [search, setSearch] = useState("");
   const [viewingProfile, setViewingProfile] = useState<any | null>(null);
   const [feedPosts, setFeedPosts] = useState<any[]>([]);
@@ -48,10 +49,31 @@ export default function CommunityContent({
   // Follow hover tracking
   const [hoveringFollow, setHoveringFollow] = useState<string | null>(null);
 
+  // Neural Pulse likes: map of postId -> { count, liked }
+  const [likes, setLikes] = useState<Record<string, { count: number; liked: boolean }>>({});
+  const [likingId, setLikingId] = useState<string | null>(null);
+
   useEffect(() => {
-    if (activeSubTab === "feed") fetchFeed();
-    else if (activeSubTab === "my-posts") fetchMyPosts();
+    fetchFeed();
+  }, []);
+
+  useEffect(() => {
+    if (activeSubTab === "my-posts") fetchMyPosts();
   }, [activeSubTab]);
+
+  // When feed loads, seed the local likes map from post data
+  useEffect(() => {
+    if (feedPosts.length > 0) {
+      const map: Record<string, { count: number; liked: boolean }> = {};
+      feedPosts.forEach(p => {
+        map[p._id] = {
+          count: (p.likes || []).length,
+          liked: (p.likes || []).some((id: any) => id === currentUser?._id || id?.toString() === currentUser?._id),
+        };
+      });
+      setLikes(map);
+    }
+  }, [feedPosts, currentUser?._id]);
 
   const fetchFeed = async () => {
     setLoadingFeed(true);
@@ -80,6 +102,41 @@ export default function CommunityContent({
     }
   };
 
+  const handleNeuralPulse = async (postId: string) => {
+    if (likingId) return;
+    setLikingId(postId);
+    // Optimistic
+    setLikes(prev => ({
+      ...prev,
+      [postId]: {
+        count: (prev[postId]?.count || 0) + (prev[postId]?.liked ? -1 : 1),
+        liked: !prev[postId]?.liked,
+      },
+    }));
+    try {
+      const res = await fetch("/api/news/like", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLikes(prev => ({ ...prev, [postId]: { count: data.likes, liked: data.liked } }));
+      }
+    } catch {
+      // revert
+      setLikes(prev => ({
+        ...prev,
+        [postId]: {
+          count: (prev[postId]?.count || 0) + (prev[postId]?.liked ? -1 : 1),
+          liked: !prev[postId]?.liked,
+        },
+      }));
+    } finally {
+      setLikingId(null);
+    }
+  };
+
   const handleCompose = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!composeForm.title || !composeForm.content) return;
@@ -95,7 +152,6 @@ export default function CommunityContent({
       if (res.ok) {
         setComposeStatus({ type: "success", message: "✓ Post published to the community feed!" });
         setMyPosts(prev => [data.news, ...prev]);
-        // Also add to feed
         setFeedPosts(prev => [data.news, ...prev]);
         setTimeout(() => {
           setShowCompose(false);
@@ -168,6 +224,13 @@ export default function CommunityContent({
     return m.name?.toLowerCase().includes(q) || m.role?.toLowerCase().includes(q) || (m.skills || []).some((s: string) => s.toLowerCase().includes(q));
   });
 
+  // Suggested users = non-admin members the current user doesn't follow yet, excluding self
+  const suggestedUsers = nonAdminMembers.filter(m => {
+    if (m._id === currentUser?._id) return false;
+    const following = currentUser?.following || [];
+    return !following.some((f: any) => f === m._id || f?._id === m._id || f?.toString() === m._id);
+  }).slice(0, 5);
+
   return (
     <section className="glass-panel p-6 md:p-8 rounded-[2.5rem] border border-card-border mb-12 relative overflow-hidden bg-gradient-to-br from-background via-brand-500/[0.005] to-purple-500/[0.005]">
       <div className="absolute -top-24 -right-24 w-80 h-80 bg-brand-500/5 blur-3xl rounded-full pointer-events-none" />
@@ -182,8 +245,8 @@ export default function CommunityContent({
             <h2 className="text-2xl font-bold text-foreground">Community Ecosystem</h2>
             <div className="flex gap-4 mt-1.5">
               {[
-                { id: "members", label: `Members (${nonAdminMembers.length})` },
                 { id: "feed", label: "Neural Feed" },
+                { id: "members", label: `Members (${nonAdminMembers.length})` },
                 { id: "my-posts", label: "My Posts" },
               ].map(tab => (
                 <button
@@ -223,6 +286,150 @@ export default function CommunityContent({
       {/* Content */}
       <div className="relative z-10">
 
+        {/* Feed Tab */}
+        {activeSubTab === "feed" && (
+          <div className="flex flex-col xl:flex-row gap-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+
+            {/* Main Feed */}
+            <div className="flex-1 max-w-3xl mx-auto xl:mx-0 space-y-8">
+              {loadingFeed ? (
+                <div className="py-24 flex flex-col items-center gap-4">
+                  <div className="w-10 h-10 border-2 border-brand-500/20 border-t-brand-500 rounded-full animate-spin" />
+                  <p className="text-[10px] font-bold text-foreground/30 uppercase tracking-[0.2em]">Synchronizing Feed...</p>
+                </div>
+              ) : feedPosts.length === 0 ? (
+                <div className="py-24 text-center opacity-40">
+                  <Activity size={48} className="mx-auto mb-4" />
+                  <h3 className="font-bold">Neural Feed Empty</h3>
+                  <p className="text-xs mt-1">Be the first to post something!</p>
+                </div>
+              ) : (
+                feedPosts.map((post) => {
+                  const author = nonAdminMembers.find(m => m._id === post.submittedBy?.toString?.() || m._id === post.submittedBy) || { name: post.author || "Anonymous", _id: null };
+                  const isFollowing = post.submittedBy && (currentUser?.following || []).some((id: any) =>
+                    id === post.submittedBy || id?._id === post.submittedBy || id?.toString() === post.submittedBy
+                  );
+                  const isHovering = hoveringFollow === post.submittedBy;
+                  const postLikes = likes[post._id] || { count: (post.likes || []).length, liked: false };
+                  return (
+                    <div key={post._id} className="glass-panel p-6 md:p-8 rounded-[2.5rem] border border-card-border hover:border-brand-500/20 transition-all group">
+                      <div className="flex items-start justify-between mb-6">
+                        <div className="flex items-center gap-4">
+                          <button
+                            onClick={() => author._id && setViewingProfile(author)}
+                            className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center text-sm font-bold text-brand-500 hover:scale-105 transition-transform"
+                          >
+                            {author.name?.[0]?.toUpperCase() || "A"}
+                          </button>
+                          <div>
+                            <h4 className="font-bold text-base flex items-center gap-2">
+                              <button onClick={() => author._id && setViewingProfile(author)} className="hover:text-brand-500 transition-colors">
+                                {author.name}
+                              </button>
+                              {post.submittedBy && <ShieldCheck size={14} className="text-brand-500" />}
+                            </h4>
+                            <div className="flex items-center gap-3 text-[10px] font-bold text-foreground/40 uppercase tracking-wider mt-0.5">
+                              <span className="flex items-center gap-1.5"><Clock size={10} /> {formatDistanceToNow(new Date(post.createdAt || post.date))} ago</span>
+                              <span>•</span>
+                              <span className="text-brand-500/70">{post.category}</span>
+                            </div>
+                          </div>
+                        </div>
+                        {post.submittedBy && post.submittedBy !== currentUser?._id && (
+                          <button
+                            onClick={() => onFollow(post.submittedBy)}
+                            onMouseEnter={() => setHoveringFollow(post.submittedBy)}
+                            onMouseLeave={() => setHoveringFollow(null)}
+                            className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
+                              isFollowing
+                                ? isHovering
+                                  ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                                  : "bg-foreground/5 text-foreground/50 border border-card-border"
+                                : "bg-brand-500 text-white shadow-lg shadow-brand-500/20 hover:scale-105 active:scale-95"
+                            }`}
+                          >
+                            {isFollowing ? (isHovering ? "Unfollow" : "Following") : "Follow"}
+                          </button>
+                        )}
+                      </div>
+                      <div className="space-y-4">
+                        <h3 className="text-xl font-bold text-foreground group-hover:text-brand-500 transition-colors leading-tight">{post.title}</h3>
+                        {post.summary && <p className="text-sm text-foreground/60 font-medium leading-relaxed italic border-l-2 border-brand-500/20 pl-4">"{post.summary}"</p>}
+                        {post.content && <p className="text-xs text-foreground/45 font-medium line-clamp-3">{post.content}</p>}
+                      </div>
+                      <div className="flex items-center justify-between mt-8 pt-6 border-t border-card-border">
+                        <div className="flex items-center gap-6">
+                          <button
+                            onClick={() => handleNeuralPulse(post._id)}
+                            disabled={likingId === post._id}
+                            className={`flex items-center gap-2 transition-all group/pulse active:scale-95 ${postLikes.liked ? "text-brand-500" : "text-foreground/30 hover:text-brand-500"}`}
+                          >
+                            <Heart
+                              size={16}
+                              className={`transition-transform group-hover/pulse:scale-125 ${postLikes.liked ? "fill-brand-500" : ""}`}
+                            />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">
+                              Neural Pulse{postLikes.count > 0 ? ` · ${postLikes.count}` : ""}
+                            </span>
+                          </button>
+                          <button className="flex items-center gap-2 text-foreground/30 hover:text-purple-500 transition-colors">
+                            <MessageSquare size={16} />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Comment</span>
+                          </button>
+                        </div>
+                        <button className="flex items-center gap-2 text-foreground/30 hover:text-foreground transition-colors">
+                          <Share2 size={16} />
+                          <span className="text-[10px] font-bold uppercase tracking-widest">Relay</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Suggested People Sidebar */}
+            {suggestedUsers.length > 0 && (
+              <aside className="xl:w-72 shrink-0">
+                <div className="glass-panel p-5 rounded-[2rem] border border-card-border sticky top-8">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-4 flex items-center gap-2">
+                    <Zap size={12} className="text-brand-500" /> People to Follow
+                  </h4>
+                  <div className="space-y-3">
+                    {suggestedUsers.map(m => (
+                      <div key={m._id} className="flex items-center gap-3 group">
+                        <button onClick={() => setViewingProfile(m)} className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center text-xs font-bold text-brand-500 shrink-0 hover:scale-105 transition-transform">
+                          {m.name?.[0]?.toUpperCase() || "?"}
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          <button onClick={() => setViewingProfile(m)} className="font-bold text-xs text-foreground hover:text-brand-500 transition-colors truncate block w-full text-left">
+                            {m.name}
+                          </button>
+                          <p className="text-[9px] text-foreground/30 font-bold uppercase tracking-wider truncate">
+                            {m.role || "Member"} · {(m.followers || []).length} followers
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => onFollow(m._id)}
+                          className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[9px] font-bold bg-brand-500/10 text-brand-500 border border-brand-500/20 hover:bg-brand-500 hover:text-white transition-all"
+                        >
+                          <UserPlus size={10} /> Follow
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setActiveSubTab("members")}
+                    className="w-full mt-4 py-2.5 rounded-xl text-[10px] font-bold text-foreground/40 hover:text-brand-500 border border-card-border hover:border-brand-500/20 transition-all"
+                  >
+                    View All Members →
+                  </button>
+                </div>
+              </aside>
+            )}
+          </div>
+        )}
+
         {/* Members Tab */}
         {activeSubTab === "members" && (
           filteredMembers.length === 0 ? (
@@ -245,91 +452,6 @@ export default function CommunityContent({
               ))}
             </div>
           )
-        )}
-
-        {/* Feed Tab */}
-        {activeSubTab === "feed" && (
-          <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-            {loadingFeed ? (
-              <div className="py-24 flex flex-col items-center gap-4">
-                <div className="w-10 h-10 border-2 border-brand-500/20 border-t-brand-500 rounded-full animate-spin" />
-                <p className="text-[10px] font-bold text-foreground/30 uppercase tracking-[0.2em]">Synchronizing Feed...</p>
-              </div>
-            ) : feedPosts.length === 0 ? (
-              <div className="py-24 text-center opacity-40">
-                <Activity size={48} className="mx-auto mb-4" />
-                <h3 className="font-bold">Neural Feed Empty</h3>
-                <p className="text-xs mt-1">Be the first to post something!</p>
-              </div>
-            ) : (
-              feedPosts.map((post) => {
-                const author = nonAdminMembers.find(m => m._id === post.submittedBy) || { name: post.author || "Anonymous" };
-                const isFollowing = (currentUser?.following || []).some((id: any) =>
-                  id === post.submittedBy || id?._id === post.submittedBy || id?.toString() === post.submittedBy
-                );
-                const isHovering = hoveringFollow === post.submittedBy;
-                return (
-                  <div key={post._id} className="glass-panel p-6 md:p-8 rounded-[2.5rem] border border-card-border hover:border-brand-500/20 transition-all group">
-                    <div className="flex items-start justify-between mb-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center text-sm font-bold text-brand-500">
-                          {author.name?.[0]?.toUpperCase() || "A"}
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-base flex items-center gap-2">
-                            {author.name}
-                            {post.submittedBy && <ShieldCheck size={14} className="text-brand-500" />}
-                          </h4>
-                          <div className="flex items-center gap-3 text-[10px] font-bold text-foreground/40 uppercase tracking-wider mt-0.5">
-                            <span className="flex items-center gap-1.5"><Clock size={10} /> {formatDistanceToNow(new Date(post.createdAt || post.date))} ago</span>
-                            <span>•</span>
-                            <span className="text-brand-500/70">{post.category}</span>
-                          </div>
-                        </div>
-                      </div>
-                      {post.submittedBy && post.submittedBy !== currentUser?._id && (
-                        <button
-                          onClick={() => onFollow(post.submittedBy)}
-                          onMouseEnter={() => setHoveringFollow(post.submittedBy)}
-                          onMouseLeave={() => setHoveringFollow(null)}
-                          className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
-                            isFollowing
-                              ? isHovering
-                                ? "bg-red-500/10 text-red-400 border border-red-500/20"
-                                : "bg-foreground/5 text-foreground/50 border border-card-border"
-                              : "bg-brand-500 text-white shadow-lg shadow-brand-500/20 hover:scale-105 active:scale-95"
-                          }`}
-                        >
-                          {isFollowing ? (isHovering ? "Unfollow" : "Following") : "Follow"}
-                        </button>
-                      )}
-                    </div>
-                    <div className="space-y-4">
-                      <h3 className="text-xl font-bold text-foreground group-hover:text-brand-500 transition-colors leading-tight">{post.title}</h3>
-                      <p className="text-sm text-foreground/60 font-medium leading-relaxed italic border-l-2 border-brand-500/20 pl-4">"{post.summary}"</p>
-                      {post.content && <p className="text-xs text-foreground/45 font-medium line-clamp-3">{post.content}</p>}
-                    </div>
-                    <div className="flex items-center justify-between mt-8 pt-6 border-t border-card-border">
-                      <div className="flex items-center gap-6">
-                        <button className="flex items-center gap-2 text-foreground/30 hover:text-brand-500 transition-colors">
-                          <Heart size={16} />
-                          <span className="text-[10px] font-bold uppercase tracking-wider">Neural Pulse</span>
-                        </button>
-                        <button className="flex items-center gap-2 text-foreground/30 hover:text-purple-500 transition-colors">
-                          <MessageSquare size={16} />
-                          <span className="text-[10px] font-bold uppercase tracking-wider">Comment</span>
-                        </button>
-                      </div>
-                      <button className="flex items-center gap-2 text-foreground/30 hover:text-foreground transition-colors">
-                        <Share2 size={16} />
-                        <span className="text-[10px] font-bold uppercase tracking-widest">Relay</span>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
         )}
 
         {/* My Posts Tab */}
@@ -398,7 +520,6 @@ export default function CommunityContent({
               </div>
             )}
 
-            {/* Show/hide compose prompt if no compose panel */}
             {!showCompose && (
               <button
                 onClick={() => setShowCompose(true)}
@@ -451,24 +572,16 @@ export default function CommunityContent({
                   </div>
                   <div className="space-y-4">
                     <h3 className="text-xl font-bold text-foreground group-hover:text-brand-500 transition-colors leading-tight">{post.title}</h3>
-                    <p className="text-sm text-foreground/60 font-medium leading-relaxed italic border-l-2 border-brand-500/20 pl-4">"{post.summary}"</p>
+                    {post.summary && <p className="text-sm text-foreground/60 font-medium leading-relaxed italic border-l-2 border-brand-500/20 pl-4">"{post.summary}"</p>}
                     {post.content && <p className="text-xs text-foreground/45 font-medium line-clamp-3">{post.content}</p>}
                   </div>
                   <div className="flex items-center justify-between mt-8 pt-6 border-t border-card-border">
-                    <div className="flex items-center gap-6">
-                      <button className="flex items-center gap-2 text-foreground/30 hover:text-brand-500 transition-colors">
-                        <Heart size={16} />
-                        <span className="text-[10px] font-bold uppercase tracking-wider">Neural Pulse</span>
-                      </button>
-                      <button className="flex items-center gap-2 text-foreground/30 hover:text-purple-500 transition-colors">
-                        <MessageSquare size={16} />
-                        <span className="text-[10px] font-bold uppercase tracking-wider">Comment</span>
-                      </button>
+                    <div className="flex items-center gap-4">
+                      <span className={`flex items-center gap-1.5 text-[10px] font-bold ${(post.likes?.length || 0) > 0 ? "text-brand-500" : "text-foreground/25"}`}>
+                        <Heart size={13} className={(post.likes?.length || 0) > 0 ? "fill-brand-500" : ""} />
+                        {post.likes?.length || 0} Neural Pulses
+                      </span>
                     </div>
-                    <button className="flex items-center gap-2 text-foreground/30 hover:text-foreground transition-colors">
-                      <Share2 size={16} />
-                      <span className="text-[10px] font-bold uppercase tracking-widest">Relay</span>
-                    </button>
                   </div>
                 </div>
               ))
@@ -481,9 +594,9 @@ export default function CommunityContent({
       {viewingProfile && (
         <ProfileModal
           member={viewingProfile}
-          currentUserId={currentUser?._id}
+          currentUser={currentUser}
           onClose={() => setViewingProfile(null)}
-          onFollow={onFollow}
+          onFollow={(id) => { onFollow(id); }}
           onMessage={(m) => { setViewingProfile(null); onMessage(m); }}
         />
       )}
@@ -503,8 +616,8 @@ export default function CommunityContent({
             </div>
             <form onSubmit={handleSaveEdit} className="space-y-4">
               {[
-                { label: "Title", key: "title", type: "input" },
-                { label: "Summary", key: "summary", type: "input" },
+                { label: "Title", key: "title" },
+                { label: "Summary", key: "summary" },
               ].map(field => (
                 <div key={field.key}>
                   <label className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest block mb-1.5">{field.label}</label>
