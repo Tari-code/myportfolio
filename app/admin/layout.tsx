@@ -53,6 +53,7 @@ export default function AdminLayout({
     { href: "/admin/news", label: "News" },
     { href: "/admin/reviews", label: "Reviews" },
     { href: "/admin/settings", label: "Settings" },
+    { href: "/admin/setup", label: "Setup" },
   ];
 
   return (
