@@ -879,7 +879,7 @@ export default function CommunityContent({
         <ProfileModal
           member={viewingProfile}
           currentUserId={currentUser?._id}
-          currentUserFollowing={currentUser?.following || []}
+          // currentUserFollowing={currentUser?.following || []}
           onClose={() => setViewingProfile(null)}
           onFollow={onFollow}
           onMessage={onMessage}
