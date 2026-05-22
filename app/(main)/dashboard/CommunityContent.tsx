@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Search, Users, Activity, MessageSquare, Heart, Share2, Clock, Pencil,
-  Trash2, X, Loader2, CheckCircle2, ShieldCheck, PlusCircle, Send, ChevronDown,
-  UserPlus, Zap, ArrowLeft, Globe, Link2, Check
+  Trash2, X, Loader2, CheckCircle2, ShieldCheck, PlusCircle, Send,
+  UserPlus, Zap, Globe, Link2, Check
 } from "lucide-react";
 import CommunityCard from "./CommunityCard";
-import ProfileModal from "./ProfileModal";
 import { formatDistanceToNow } from "date-fns";
 
 interface CommunityContentProps {
@@ -44,20 +44,14 @@ export default function CommunityContent({
   onFollow,
   onMessage,
 }: CommunityContentProps) {
+  const router = useRouter();
   const [activeSubTab, setActiveSubTab] = useState<"feed" | "members" | "my-posts">("feed");
   const [search, setSearch] = useState("");
-  const [viewingProfile, setViewingProfile] = useState<any | null>(null);
   const [feedPosts, setFeedPosts] = useState<any[]>([]);
   const [myPosts, setMyPosts] = useState<any[]>([]);
   const [loadingFeed, setLoadingFeed] = useState(false);
   const [loadingMyPosts, setLoadingMyPosts] = useState(false);
 
-  // Post detail modal
-  const [openPost, setOpenPost] = useState<any | null>(null);
-  const [postComments, setPostComments] = useState<Comment[]>([]);
-  const [loadingComments, setLoadingComments] = useState(false);
-  const [commentInput, setCommentInput] = useState("");
-  const [submittingComment, setSubmittingComment] = useState(false);
   const [copied, setCopied] = useState(false);
 
   // Compose new post
@@ -76,13 +70,6 @@ export default function CommunityContent({
   const [hoveringFollow, setHoveringFollow] = useState<string | null>(null);
   const [likes, setLikes] = useState<Record<string, { count: number; liked: boolean }>>({});
   const [likingId, setLikingId] = useState<string | null>(null);
-
-  // Comment like/reply state
-  const [commentLikes, setCommentLikes] = useState<Record<string, { count: number; liked: boolean }>>({});
-  const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [replyInput, setReplyInput] = useState("");
-  const [submittingReply, setSubmittingReply] = useState(false);
-  const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
 
   useEffect(() => { fetchFeed(); }, []);
   useEffect(() => { if (activeSubTab === "my-posts") fetchMyPosts(); }, [activeSubTab]);
@@ -116,35 +103,6 @@ export default function CommunityContent({
       if (res.ok) { const data = await res.json(); setMyPosts(data.news || []); }
     } catch (err) { console.error("Failed to fetch my posts:", err); }
     finally { setLoadingMyPosts(false); }
-  };
-
-  const openPostDetail = async (post: any) => {
-    setOpenPost(post);
-    setLoadingComments(true);
-    setPostComments(post.comments || []);
-    try {
-      const res = await fetch(`/api/news/comment?postId=${post._id}`);
-      if (res.ok) { const data = await res.json(); setPostComments(data.comments || []); }
-    } catch { } finally { setLoadingComments(false); }
-  };
-
-  const handleSubmitComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!commentInput.trim() || !openPost) return;
-    setSubmittingComment(true);
-    try {
-      const res = await fetch("/api/news/comment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId: openPost._id, text: commentInput.trim() }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setPostComments(prev => [...prev, data.comment]);
-        setCommentInput("");
-        setFeedPosts(prev => prev.map(p => p._id === openPost._id ? { ...p, comments: [...(p.comments || []), data.comment] } : p));
-      }
-    } catch { } finally { setSubmittingComment(false); }
   };
 
   const handleShare = async (post: any) => {
@@ -182,44 +140,6 @@ export default function CommunityContent({
         [postId]: { count: (prev[postId]?.count || 0) + (prev[postId]?.liked ? -1 : 1), liked: !prev[postId]?.liked },
       }));
     } finally { setLikingId(null); }
-  };
-
-  const handleCommentLike = async (commentId: string, postId: string) => {
-    const prev = commentLikes[commentId] || { count: 0, liked: false };
-    setCommentLikes(cl => ({ ...cl, [commentId]: { count: prev.count + (prev.liked ? -1 : 1), liked: !prev.liked } }));
-    try {
-      const res = await fetch("/api/news/comment", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId, commentId, action: "like" }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setCommentLikes(cl => ({ ...cl, [commentId]: { count: data.likes, liked: data.liked } }));
-      }
-    } catch {
-      setCommentLikes(cl => ({ ...cl, [commentId]: prev }));
-    }
-  };
-
-  const handleSubmitReply = async (commentId: string, postId: string) => {
-    if (!replyInput.trim()) return;
-    setSubmittingReply(true);
-    try {
-      const res = await fetch("/api/news/comment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId, commentId, text: replyInput.trim(), action: "reply" }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setPostComments(prev => prev.map(c =>
-          c._id === commentId ? { ...c, replies: data.replies } : c
-        ));
-        setReplyInput("");
-        setReplyingTo(null);
-      }
-    } catch { } finally { setSubmittingReply(false); }
   };
 
   const handleCompose = async (e: React.FormEvent) => {
@@ -380,14 +300,14 @@ export default function CommunityContent({
                         <div className="flex items-start justify-between p-4 md:p-6 pb-0">
                           <div className="flex items-center gap-3">
                             <button
-                              onClick={() => author._id && setViewingProfile(author)}
+                              onClick={() => author._id && router.push(`/dashboard/profile/${author._id}`)}
                               className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center text-sm font-bold text-brand-500 hover:scale-105 transition-transform shrink-0"
                             >
                               {author.name?.[0]?.toUpperCase() || "A"}
                             </button>
                             <div>
                               <h4 className="font-bold text-sm flex items-center gap-1.5">
-                                <button onClick={() => author._id && setViewingProfile(author)} className="hover:text-brand-500 transition-colors">
+                                <button onClick={() => author._id && router.push(`/dashboard/profile/${author._id}`)} className="hover:text-brand-500 transition-colors">
                                   {author.name}
                                 </button>
                                 {post.submittedBy && <ShieldCheck size={12} className="text-brand-500 shrink-0" />}
@@ -423,7 +343,7 @@ export default function CommunityContent({
                           )}
                           {post.content && post.content.length > 200 && (
                             <button
-                              onClick={() => openPostDetail(post)}
+                              onClick={() => router.push(`/dashboard/post/${post._id}`)}
                               className="text-brand-500 text-xs font-bold hover:underline mt-1"
                             >
                               Read more…
@@ -443,7 +363,7 @@ export default function CommunityContent({
                               <span className="text-xs font-bold">{postLikes.count > 0 ? postLikes.count : ""}</span>
                             </button>
                             <button
-                              onClick={() => openPostDetail(post)}
+                              onClick={() => router.push(`/dashboard/post/${post._id}`)}
                               className="flex items-center gap-1.5 text-foreground/30 hover:text-brand-500 transition-colors"
                             >
                               <MessageSquare size={17} />
@@ -459,7 +379,7 @@ export default function CommunityContent({
                               <span className="text-xs font-bold hidden sm:inline">{copied ? "Copied!" : "Share"}</span>
                             </button>
                             <button
-                              onClick={() => openPostDetail(post)}
+                              onClick={() => router.push(`/dashboard/post/${post._id}`)}
                               className="text-[10px] font-bold text-brand-500 hover:text-brand-400 transition-colors px-3 py-1.5 rounded-xl bg-brand-500/5 hover:bg-brand-500/10 border border-brand-500/15"
                             >
                               View Post
@@ -482,11 +402,11 @@ export default function CommunityContent({
                     <div className="space-y-3">
                       {suggestedUsers.map(m => (
                         <div key={m._id} className="flex items-center gap-3 group">
-                          <button onClick={() => setViewingProfile(m)} className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center text-xs font-bold text-brand-500 shrink-0 hover:scale-105 transition-transform">
+                          <button onClick={() => router.push(`/dashboard/profile/${m._id}`)} className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center text-xs font-bold text-brand-500 shrink-0 hover:scale-105 transition-transform">
                             {m.name?.[0]?.toUpperCase() || "?"}
                           </button>
                           <div className="flex-1 min-w-0">
-                            <button onClick={() => setViewingProfile(m)} className="font-bold text-xs text-foreground hover:text-brand-500 transition-colors truncate block w-full text-left">
+                            <button onClick={() => router.push(`/dashboard/profile/${m._id}`)} className="font-bold text-xs text-foreground hover:text-brand-500 transition-colors truncate block w-full text-left">
                               {m.name}
                             </button>
                             <p className="text-[9px] text-foreground/30 font-bold truncate">{m.role || "Member"}</p>
@@ -541,7 +461,7 @@ export default function CommunityContent({
                     key={member._id}
                     member={member}
                     currentUserId={currentUser?._id}
-                    onViewProfile={setViewingProfile}
+                    onViewProfile={(m) => router.push(`/dashboard/profile/${m._id}`)}
                     onFollow={onFollow}
                     onMessage={onMessage}
                   />
@@ -618,231 +538,6 @@ export default function CommunityContent({
         )}
       </div>
 
-      {/* Post Detail Modal (Facebook-style) */}
-      {openPost && (
-        <div className="fixed inset-0 z-[200] flex items-stretch md:items-center justify-center" onClick={(e) => e.target === e.currentTarget && setOpenPost(null)}>
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpenPost(null)} />
-          <div className="relative z-10 w-full md:max-w-2xl md:mx-4 bg-background border border-card-border md:rounded-[2.5rem] flex flex-col overflow-hidden shadow-2xl" style={{ maxHeight: "100dvh", height: "100dvh" }}>
-            {/* Modal header */}
-            <div className="flex items-center gap-3 px-4 py-4 border-b border-card-border shrink-0 bg-background/95 backdrop-blur-md">
-              <button onClick={() => setOpenPost(null)} className="p-2 rounded-xl hover:bg-foreground/10 text-foreground/60 transition-all -ml-1">
-                <ArrowLeft size={20} />
-              </button>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-sm text-foreground truncate">{openPost.title}</h3>
-                <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-wider">{openPost.category}</p>
-              </div>
-              <button onClick={() => handleShare(openPost)} className="p-2 rounded-xl hover:bg-foreground/10 text-foreground/60 transition-all">
-                {copied ? <Check size={18} className="text-green-500" /> : <Share2 size={18} />}
-              </button>
-            </div>
-
-            {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto">
-              {/* Post body */}
-              <div className="p-5 md:p-6 border-b border-card-border">
-                {/* Author */}
-                <div className="flex items-center gap-3 mb-4">
-                  {(() => {
-                    const postAuthor = nonAdminMembers.find(m =>
-                      m._id === openPost.submittedBy?.toString?.() || m._id === openPost.submittedBy
-                    );
-                    return (
-                      <button
-                        onClick={() => { if (postAuthor) setViewingProfile(postAuthor); }}
-                        className={`flex items-center gap-3 group ${postAuthor ? "cursor-pointer" : "cursor-default"}`}
-                      >
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center text-sm font-bold text-brand-500 shrink-0 group-hover:ring-2 group-hover:ring-brand-500/30 transition-all">
-                          {(openPost.author || "A")[0].toUpperCase()}
-                        </div>
-                        <div className="text-left">
-                          <p className={`font-bold text-sm ${postAuthor ? "group-hover:text-brand-500 transition-colors" : ""}`}>{openPost.author || "Anonymous"}</p>
-                          <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-wider">
-                            {formatDistanceToNow(new Date(openPost.createdAt || openPost.date))} ago
-                          </p>
-                        </div>
-                      </button>
-                    );
-                  })()}
-                </div>
-
-                {openPost.summary && (
-                  <p className="text-sm text-foreground/70 font-medium leading-relaxed italic border-l-2 border-brand-500/30 pl-3 mb-4">"{openPost.summary}"</p>
-                )}
-                <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">{openPost.content}</p>
-
-                {/* Like & share row */}
-                <div className="flex items-center justify-between mt-5 pt-4 border-t border-card-border">
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => handleNeuralPulse(openPost._id)}
-                      disabled={likingId === openPost._id}
-                      className={`flex items-center gap-2 text-sm font-bold transition-all active:scale-95 ${(likes[openPost._id]?.liked) ? "text-pink-500" : "text-foreground/40 hover:text-pink-500"}`}
-                    >
-                      <Heart size={20} className={likes[openPost._id]?.liked ? "fill-pink-500" : ""} />
-                      {(likes[openPost._id]?.count || 0) > 0 && <span>{likes[openPost._id]?.count}</span>}
-                      <span>Like</span>
-                    </button>
-                    <div className="flex items-center gap-2 text-sm font-bold text-foreground/40">
-                      <MessageSquare size={20} />
-                      <span>{postComments.length} {postComments.length === 1 ? "Comment" : "Comments"}</span>
-                    </div>
-                  </div>
-                  <button onClick={() => handleShare(openPost)} className="flex items-center gap-2 text-sm font-bold text-foreground/40 hover:text-foreground transition-colors">
-                    {copied ? <Check size={18} className="text-green-500" /> : <Share2 size={18} />}
-                    <span>{copied ? "Copied!" : "Share"}</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Comments section */}
-              <div className="p-5 md:p-6 space-y-4">
-                <h4 className="text-xs font-bold text-foreground/40 uppercase tracking-widest">Comments</h4>
-
-                {loadingComments ? (
-                  <div className="flex justify-center py-6">
-                    <div className="w-6 h-6 border-2 border-brand-500/20 border-t-brand-500 rounded-full animate-spin" />
-                  </div>
-                ) : postComments.length === 0 ? (
-                  <div className="text-center py-8 opacity-40">
-                    <MessageSquare size={28} className="mx-auto mb-2" />
-                    <p className="text-xs font-bold">No comments yet — be the first!</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {postComments.map((comment, idx) => {
-                      const cid = comment._id || String(idx);
-                      const cLike = commentLikes[cid] || { count: (comment.likes || []).length, liked: false };
-                      const replies = comment.replies || [];
-                      const showReplies = expandedReplies.has(cid);
-                      return (
-                        <div key={cid} className="flex gap-3">
-                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center text-xs font-bold text-brand-500 shrink-0 mt-0.5">
-                            {(comment.userName || "?")[0].toUpperCase()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="bg-foreground/[0.05] border border-card-border rounded-2xl rounded-tl-md px-4 py-3">
-                              <p className="text-xs font-bold text-foreground mb-1">{comment.userName}</p>
-                              <p className="text-sm text-foreground/80 leading-relaxed">{comment.text}</p>
-                            </div>
-                            {/* Like · Reply · timestamp row */}
-                            <div className="flex items-center gap-4 mt-1.5 px-1">
-                              <span className="text-[10px] text-foreground/25 font-semibold">
-                                {comment.createdAt ? formatDistanceToNow(new Date(comment.createdAt)) + " ago" : "just now"}
-                              </span>
-                              <button
-                                onClick={() => comment._id && handleCommentLike(comment._id, openPost!._id)}
-                                className={`text-[11px] font-bold transition-colors flex items-center gap-1 ${cLike.liked ? "text-pink-500" : "text-foreground/35 hover:text-pink-400"}`}
-                              >
-                                <Heart size={11} className={cLike.liked ? "fill-pink-500" : ""} />
-                                {cLike.count > 0 ? cLike.count : ""} Like
-                              </button>
-                              <button
-                                onClick={() => setReplyingTo(replyingTo === cid ? null : cid)}
-                                className="text-[11px] font-bold text-foreground/35 hover:text-brand-500 transition-colors"
-                              >
-                                Reply
-                              </button>
-                              {replies.length > 0 && (
-                                <button
-                                  onClick={() => setExpandedReplies(prev => {
-                                    const s = new Set(prev);
-                                    s.has(cid) ? s.delete(cid) : s.add(cid);
-                                    return s;
-                                  })}
-                                  className="text-[11px] font-bold text-brand-500/70 hover:text-brand-500 transition-colors"
-                                >
-                                  {showReplies ? "▲ Hide" : `▼ ${replies.length} Repl${replies.length === 1 ? "y" : "ies"}`}
-                                </button>
-                              )}
-                            </div>
-
-                            {/* Replies list */}
-                            {showReplies && replies.length > 0 && (
-                              <div className="mt-2 ml-4 space-y-2 border-l-2 border-brand-500/15 pl-3">
-                                {replies.map((reply, ri) => (
-                                  <div key={reply._id || ri} className="flex gap-2">
-                                    <div className="w-6 h-6 rounded-lg bg-purple-500/20 flex items-center justify-center text-[10px] font-bold text-purple-400 shrink-0">
-                                      {(reply.userName || "?")[0].toUpperCase()}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <div className="bg-foreground/[0.04] border border-card-border rounded-xl rounded-tl-sm px-3 py-2">
-                                        <p className="text-[11px] font-bold text-foreground mb-0.5">{reply.userName}</p>
-                                        <p className="text-xs text-foreground/70 leading-relaxed">{reply.text}</p>
-                                      </div>
-                                      <p className="text-[9px] text-foreground/25 font-semibold mt-0.5 px-1">
-                                        {reply.createdAt ? formatDistanceToNow(new Date(reply.createdAt)) + " ago" : "just now"}
-                                      </p>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-
-                            {/* Reply input */}
-                            {replyingTo === cid && (
-                              <div className="mt-2 ml-1 flex gap-2 items-center animate-in slide-in-from-top-1 duration-200">
-                                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center text-[10px] font-bold text-brand-500 shrink-0">
-                                  {(currentUser?.name || "?")[0].toUpperCase()}
-                                </div>
-                                <div className="flex-1 bg-foreground/[0.05] border border-brand-500/30 rounded-[1.5rem] px-3 py-2 focus-within:border-brand-500/60 transition-all flex items-center gap-2">
-                                  <input
-                                    autoFocus
-                                    type="text"
-                                    value={replyInput}
-                                    onChange={e => setReplyInput(e.target.value)}
-                                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (comment._id) handleSubmitReply(comment._id, openPost!._id); } }}
-                                    placeholder={`Reply to ${comment.userName}…`}
-                                    className="flex-1 bg-transparent text-xs text-foreground placeholder:text-foreground/25 focus:outline-none font-medium"
-                                  />
-                                  <button
-                                    onClick={() => comment._id && handleSubmitReply(comment._id, openPost!._id)}
-                                    disabled={!replyInput.trim() || submittingReply}
-                                    className="w-6 h-6 rounded-full bg-brand-500 flex items-center justify-center text-white disabled:opacity-30 transition-all active:scale-95 shrink-0"
-                                  >
-                                    {submittingReply ? <Loader2 size={10} className="animate-spin" /> : <Send size={10} className="ml-0.5" />}
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Comment input */}
-            <div className="p-4 border-t border-card-border bg-background/95 backdrop-blur-md shrink-0">
-              <form onSubmit={handleSubmitComment} className="flex gap-2 items-center">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center text-xs font-bold text-brand-500 shrink-0">
-                  {(currentUser?.name || "?")[0].toUpperCase()}
-                </div>
-                <div className="flex-1 bg-foreground/[0.05] border border-card-border rounded-[2rem] px-4 py-2.5 focus-within:border-brand-500/50 transition-all">
-                  <input
-                    type="text"
-                    value={commentInput}
-                    onChange={(e) => setCommentInput(e.target.value)}
-                    placeholder="Write a comment…"
-                    disabled={submittingComment}
-                    className="w-full bg-transparent text-sm text-foreground placeholder:text-foreground/25 focus:outline-none font-medium"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={!commentInput.trim() || submittingComment}
-                  className="w-10 h-10 rounded-full bg-brand-500 hover:bg-brand-400 flex items-center justify-center text-white disabled:opacity-40 transition-all active:scale-95 shrink-0"
-                >
-                  {submittingComment ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} className="ml-0.5" />}
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Edit Modal */}
       {editingPost && (
         <div className="fixed inset-0 z-[200] flex items-end md:items-center justify-center p-0 md:p-4">
@@ -874,17 +569,6 @@ export default function CommunityContent({
         </div>
       )}
 
-      {/* Profile Modal */}
-      {viewingProfile && (
-        <ProfileModal
-          member={viewingProfile}
-          currentUserId={currentUser?._id}
-          // currentUserFollowing={currentUser?.following || []}
-          onClose={() => setViewingProfile(null)}
-          onFollow={onFollow}
-          onMessage={onMessage}
-        />
-      )}
     </section>
   );
 }

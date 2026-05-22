@@ -6,9 +6,7 @@ import {
   Edit3, X, Eye, EyeOff, Camera, Globe, Link2, AtSign, MapPin,
   Users
 } from "lucide-react";
-import dynamic from "next/dynamic";
-
-const ProfileModal = dynamic(() => import("@/app/(main)/dashboard/ProfileModal"), { ssr: false });
+import { useRouter } from "next/navigation";
 
 export default function CustomerSettings() {
   const [user, setUser] = useState<any>(null);
@@ -37,7 +35,7 @@ export default function CustomerSettings() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
-  const [showPreview, setShowPreview] = useState(false);
+  const router = useRouter();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -171,20 +169,6 @@ export default function CustomerSettings() {
     setVisibility(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const previewUser = user
-    ? {
-        ...user,
-        name: formData.name,
-        bio: visibility.bio ? formData.bio : "",
-        skills: visibility.skills ? formData.skills.split(",").map(s => s.trim()).filter(Boolean) : [],
-        website: visibility.links ? formData.website : "",
-        github: visibility.links ? formData.github : "",
-        twitter: visibility.links ? formData.twitter : "",
-        location: formData.location,
-        profileVisibility: visibility,
-      }
-    : null;
-
   if (loading) {
     return (
       <div className="min-h-screen pt-40 flex items-center justify-center">
@@ -207,7 +191,7 @@ export default function CustomerSettings() {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setShowPreview(true)}
+              onClick={() => user?._id && router.push(`/dashboard/profile/${user._id}`)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-foreground/5 border border-card-border text-foreground/70 hover:text-brand-500 hover:border-brand-500/30 text-sm font-bold transition-all active:scale-95"
             >
               <Eye size={16} /> View as Others
@@ -445,16 +429,6 @@ export default function CustomerSettings() {
         </div>
       </div>
 
-      {/* View-As Preview Modal */}
-      {showPreview && previewUser && (
-        <ProfileModal
-          member={previewUser}
-          currentUserId={user._id}
-          onClose={() => setShowPreview(false)}
-          onFollow={() => {}}
-          onMessage={() => {}}
-        />
-      )}
     </div>
   );
 }

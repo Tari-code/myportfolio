@@ -2,9 +2,18 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import News from "@/lib/models/News";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    // Only return approved news for the public feed
+    await connectDB();
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (id) {
+      const post = await News.findById(id);
+      if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json(post);
+    }
+
     const news = await News.find({ isApproved: true }).sort({ createdAt: -1 });
     return NextResponse.json(news);
   } catch (error) {
