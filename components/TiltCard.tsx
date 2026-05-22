@@ -11,7 +11,7 @@ interface TiltCardProps {
 }
 
 export default function TiltCard({
-  children,
+  children, 
   className = "",
   tiltMax = 12,
   glareIntensity = 0.15,
