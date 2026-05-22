@@ -622,7 +622,7 @@ export default function CommunityContent({
       {openPost && (
         <div className="fixed inset-0 z-[200] flex items-stretch md:items-center justify-center" onClick={(e) => e.target === e.currentTarget && setOpenPost(null)}>
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpenPost(null)} />
-          <div className="relative z-10 w-full md:max-w-2xl md:mx-4 bg-background border border-card-border md:rounded-[2.5rem] flex flex-col overflow-hidden shadow-2xl" style={{ maxHeight: "100dvh", height: "100dvh", maxHeight: "100dvh" }}>
+          <div className="relative z-10 w-full md:max-w-2xl md:mx-4 bg-background border border-card-border md:rounded-[2.5rem] flex flex-col overflow-hidden shadow-2xl" style={{ maxHeight: "100dvh", height: "100dvh" }}>
             {/* Modal header */}
             <div className="flex items-center gap-3 px-4 py-4 border-b border-card-border shrink-0 bg-background/95 backdrop-blur-md">
               <button onClick={() => setOpenPost(null)} className="p-2 rounded-xl hover:bg-foreground/10 text-foreground/60 transition-all -ml-1">
