@@ -14,7 +14,7 @@ export async function GET() {
     const dbUser = await User.findOneAndUpdate(
       { email: session.user.email },
       { $set: { lastSeen: new Date() } },
-      { new: true }
+      { returnDocument: "after" }
     ).select("emailVerified name role");
     if (dbUser) {
       session.user.emailVerified = dbUser.emailVerified ?? false;
