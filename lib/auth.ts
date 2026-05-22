@@ -2,7 +2,7 @@ import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 
-const secretKey = "herakon-secret-key-next-gen"; // In production, use process.env.JWT_SECRET
+const secretKey = process.env.JWT_SECRET || "herakon-secret-key-next-gen";
 const key = new TextEncoder().encode(secretKey);
 
 export async function hashPassword(password: string) {
