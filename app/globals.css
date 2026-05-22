@@ -114,3 +114,9 @@ body {
 .testimonial-card {
   animation: fadeInUp 0.8s ease forwards, float 5s ease-in-out infinite;
 }
+
+@layer utilities {
+  .ease-expo {
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
