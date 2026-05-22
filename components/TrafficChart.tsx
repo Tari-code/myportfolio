@@ -199,4 +199,4 @@ export default function TrafficChart({
       <Line ref={chartRef} data={chartData} options={options} />
     </div>
   );
-}
+}  
