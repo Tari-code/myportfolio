@@ -176,7 +176,7 @@ export default function DirectDMs({
                 return (
                   <button
                     key={conv._id ?? i}
-                    onClick={() => setActiveUser(other)}
+                    onClick={() => setActiveUser(other)}  
                     className={`w-full text-left px-3 py-3 rounded-2xl transition-all flex items-center gap-3 relative group active:scale-[0.98] ${
                       isActive
                         ? "bg-brand-500/10 border border-brand-500/20 shadow-lg shadow-brand-500/5"
