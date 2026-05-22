@@ -26,7 +26,7 @@ export default function TabSwitcher({ activeTab, setActiveTab, unreadCount = 0, 
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
         const badgeCount = tab.badge === 'unread' ? unreadCount : tab.badge === 'notif' ? notifCount : 0;
-        const showBadge = badgeCount > 0;
+        const showBadge = badgeCount > 0 && !isActive;
         return (
           <button
             key={tab.id}
@@ -42,15 +42,24 @@ export default function TabSwitcher({ activeTab, setActiveTab, unreadCount = 0, 
                   : tab.id === 'overview'
                   ? 'bg-gradient-to-r from-brand-600 to-brand-400 text-white border-brand-400 shadow-md shadow-brand-500/20'
                   : 'bg-brand-500 text-white border-brand-400 shadow-md shadow-brand-500/10'
-                : 'bg-foreground/5 text-foreground/60 border-transparent hover:bg-foreground/10'
+                : showBadge
+                  ? 'bg-foreground/5 text-foreground/80 border-red-500/30 hover:bg-foreground/10'
+                  : 'bg-foreground/5 text-foreground/60 border-transparent hover:bg-foreground/10'
             }`}
           >
-            <Icon size={14} className={isActive ? 'text-white' : 'text-foreground/60'} />
+            <Icon size={14} className={isActive ? 'text-white' : showBadge ? 'text-foreground/80' : 'text-foreground/60'} />
             <span className="hidden sm:inline">{tab.label}</span>
             <span className="sm:hidden">{tab.id === 'notifications' ? 'Notifs' : tab.id === 'security' ? 'Security' : tab.label}</span>
+
+            {/* Pulsing badge */}
             {showBadge && (
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[8px] font-black text-white">
-                {badgeCount > 9 ? '9+' : badgeCount}
+              <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center">
+                {/* Outer pulse ring */}
+                <span className="absolute w-4 h-4 rounded-full bg-red-500/40 animate-ping" />
+                {/* Inner solid badge */}
+                <span className="relative w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[8px] font-black text-white shadow-lg shadow-red-500/50">
+                  {badgeCount > 9 ? '9+' : badgeCount}
+                </span>
               </span>
             )}
           </button>

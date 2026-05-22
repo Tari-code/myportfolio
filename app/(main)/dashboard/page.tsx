@@ -291,7 +291,8 @@ export default function CustomerDashboard() {
   useEffect(() => {
     let convInterval: any;
     if (user) {
-      convInterval = setInterval(fetchConvs, 5000);
+      fetchConvs();
+      convInterval = setInterval(fetchConvs, 3000);
     }
     return () => clearInterval(convInterval);
   }, [user]);
@@ -607,7 +608,9 @@ Please get in touch to confirm specifications and begin engineering.`;
   };
 
   const metrics = calculateStackMetrics();
-  const unreadCount = tickets.filter(isTicketUnread).length;
+  const ticketUnreadCount = tickets.filter(isTicketUnread).length;
+  const dmUnreadCount = dmConversations.filter((c: any) => c.unread).length;
+  const unreadCount = ticketUnreadCount + dmUnreadCount;
 
   if (loading) {
     return (
