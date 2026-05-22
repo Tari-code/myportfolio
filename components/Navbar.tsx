@@ -244,18 +244,28 @@ export default function Navbar() {
           </button>
           <div className="flex flex-col gap-4 md:gap-6 pt-12 overflow-y-auto">
             {user && (
-              <div className="flex items-center gap-4 p-4 rounded-[2rem] bg-foreground/5 border border-card-border mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-brand-500/20 overflow-hidden">
-                  {user.avatar ? (
-                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-                  ) : (
-                    user.name.charAt(0).toUpperCase()
-                  )}
+              <div className="flex flex-col gap-3 mb-4">
+                <div className="flex items-center gap-4 p-4 rounded-[2rem] bg-foreground/5 border border-card-border">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-brand-500/20 overflow-hidden">
+                    {user.avatar ? (
+                      <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                    ) : (
+                      user.name.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-lg font-bold text-foreground">{user.name}</span>
+                    <span className="text-xs text-foreground/40 font-bold uppercase tracking-widest">{user.role}</span>
+                  </div>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-lg font-bold text-foreground">{user.name}</span>
-                  <span className="text-xs text-foreground/40 font-bold uppercase tracking-widest">{user.role}</span>
-                </div>
+                <Link
+                  href="/dashboard?tab=profile"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-brand-500/10 border border-brand-500/20 text-brand-500 font-bold text-base hover:bg-brand-500/20 transition-all active:scale-95"
+                >
+                  <UserCircle size={20} />
+                  My Profile
+                </Link>
               </div>
             )}
             {navLinks.map((link) => (
