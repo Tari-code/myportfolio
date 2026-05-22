@@ -11,6 +11,7 @@ import PlaygroundContent from "./PlaygroundContent";
 import CommsContent from "./CommsContent";
 import CommunityContent from "./CommunityContent";
 import NewsContent from "./NewsContent";
+import SecurityContent from "./SecurityContent";
 
 export default function CustomerDashboard() {
   const [user, setUser] = useState<any>(null);
@@ -877,6 +878,9 @@ Please get in touch to confirm specifications and begin engineering.`;
                   news={userNews}
                   onSubmitNews={() => setShowNewsModal(true)}
                 />
+              )}
+              {activeTab === "security" && (
+                <SecurityContent user={user} />
               )}
             </div>
           )}

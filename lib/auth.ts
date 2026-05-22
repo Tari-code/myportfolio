@@ -28,11 +28,11 @@ export async function decrypt(input: string): Promise<any> {
   return payload;
 }
 
-export async function login(user: any, rememberMe = false) {
+export async function login(user: any, rememberMe = false, sessionId?: string) {
   const duration = rememberMe ? 30 * 24 * 60 * 60 * 1000 : 2 * 60 * 60 * 1000;
   const expiresIn = rememberMe ? "30d" : "2h";
   const expires = new Date(Date.now() + duration);
-  const session = await encrypt({ user, expires }, expiresIn);
+  const session = await encrypt({ user, expires, sessionId }, expiresIn);
   (await cookies()).set("session", session, { expires, httpOnly: true, secure: process.env.NODE_ENV === "production" });
 }
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutGrid, MessageSquare, Users, Newspaper } from 'lucide-react';
+import { LayoutGrid, MessageSquare, Users, Newspaper, Shield } from 'lucide-react';
 
 interface TabSwitcherProps {
   activeTab: string;
@@ -11,6 +11,7 @@ const tabs = [
   { id: 'comms', label: 'Comms', icon: MessageSquare },
   { id: 'community', label: 'Community', icon: Users },
   { id: 'news', label: 'News', icon: Newspaper },
+  { id: 'security', label: 'Security & Pro', icon: Shield },
 ];
 
 export default function TabSwitcher({ activeTab, setActiveTab }: TabSwitcherProps) {
@@ -25,7 +26,9 @@ export default function TabSwitcher({ activeTab, setActiveTab }: TabSwitcherProp
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${
               isActive
-                ? 'bg-brand-500 text-white border-brand-400 shadow-md shadow-brand-500/10'
+                ? tab.id === 'security'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-indigo-500 shadow-md shadow-indigo-500/20'
+                  : 'bg-brand-500 text-white border-brand-400 shadow-md shadow-brand-500/10'
                 : 'bg-foreground/5 text-foreground/60 border-transparent hover:bg-foreground/10'
             }`}
           >
