@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, LayoutGrid, MessageSquare, Users, Newspaper, Shield, CreditCard, Bell, UserCircle } from 'lucide-react';
+import { LayoutDashboard, LayoutGrid, MessageSquare, Users, Newspaper, Shield, CreditCard, Bell } from 'lucide-react';
 
 interface TabSwitcherProps {
   activeTab: string;
@@ -10,7 +10,6 @@ interface TabSwitcherProps {
 
 const tabs = [
   { id: 'overview',       label: 'Overview',       icon: LayoutDashboard },
-  { id: 'profile',        label: 'My Profile',     icon: UserCircle },
   { id: 'notifications',  label: 'Notifications',  icon: Bell, badge: 'notif' },
   { id: 'playground',     label: 'Playground',     icon: LayoutGrid },
   { id: 'comms',          label: 'Comms',          icon: MessageSquare, badge: 'unread' },

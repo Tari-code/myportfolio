@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronDown, Menu, User, Settings, LogOut, LayoutGrid, Shield } from "lucide-react";
+import { ChevronDown, Menu, UserCircle, Settings, LogOut, LayoutGrid, Shield } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar() {
@@ -72,12 +72,6 @@ export default function Navbar() {
       ]
     },
     { href: "/projects", label: "Projects" },
-    {
-      href: "/work", label: "Work", dropdown: [
-        { href: "/work/case-studies", label: "Case Studies", desc: "In-depth project reviews" },
-        { href: "/work/open-source", label: "Open Source", desc: "Community contributions" },
-      ]
-    },
     { href: "/news", label: "News" },
     { href: "/about", label: "About" },
   ];
@@ -164,6 +158,15 @@ export default function Navbar() {
                     >
                       <LayoutGrid size={18} className="text-foreground/40 group-hover:text-brand-500" />
                       <span className="text-sm font-bold">Dashboard</span>
+                    </Link>
+
+                    <Link 
+                      href="/dashboard?tab=profile"
+                      onClick={() => setIsUserDropdownOpen(false)}
+                      className="flex items-center gap-3 p-3 rounded-2xl hover:bg-brand-500/10 hover:text-brand-500 transition-all group"
+                    >
+                      <UserCircle size={18} className="text-foreground/40 group-hover:text-brand-500" />
+                      <span className="text-sm font-bold">My Profile</span>
                     </Link>
 
                     <Link 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { User, Settings, LayoutGrid, Clock, CheckCircle2, ArrowRight, Plus, MessageSquare, Newspaper, Zap, Globe, Shield, X, Loader2, FileText, TrendingUp, Activity, Star, Sliders, DollarSign, Send, Check, Cpu, Server, Database, HardDrive, RefreshCw, AlertTriangle, KeyRound, Users, UserCheck, UserPlus, UserMinus, ArrowLeft, Info, ChevronRight } from "lucide-react";
 import TabSwitcher from "@/components/TabSwitcher";
 import { formatDistanceToNow } from "date-fns";
@@ -97,7 +98,8 @@ export default function CustomerDashboard() {
   const [notifCount, setNotifCount] = useState(0);
 
   // Next-Gen social & community messaging hub states
-  const [activeTab, setActiveTab] = useState("overview");
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState(() => searchParams.get("tab") || "overview");
   const [subCommsTab, setSubCommsTab] = useState("dm");
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [dmConversations, setDmConversations] = useState<any[]>([]);
