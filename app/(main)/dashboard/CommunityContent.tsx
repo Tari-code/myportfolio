@@ -588,15 +588,27 @@ export default function CommunityContent({
               <div className="p-5 md:p-6 border-b border-card-border">
                 {/* Author */}
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center text-sm font-bold text-brand-500 shrink-0">
-                    {(openPost.author || "A")[0].toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="font-bold text-sm">{openPost.author || "Anonymous"}</p>
-                    <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-wider">
-                      {formatDistanceToNow(new Date(openPost.createdAt || openPost.date))} ago
-                    </p>
-                  </div>
+                  {(() => {
+                    const postAuthor = nonAdminMembers.find(m =>
+                      m._id === openPost.submittedBy?.toString?.() || m._id === openPost.submittedBy
+                    );
+                    return (
+                      <button
+                        onClick={() => { if (postAuthor) setViewingProfile(postAuthor); }}
+                        className={`flex items-center gap-3 group ${postAuthor ? "cursor-pointer" : "cursor-default"}`}
+                      >
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-500/20 to-purple-500/20 flex items-center justify-center text-sm font-bold text-brand-500 shrink-0 group-hover:ring-2 group-hover:ring-brand-500/30 transition-all">
+                          {(openPost.author || "A")[0].toUpperCase()}
+                        </div>
+                        <div className="text-left">
+                          <p className={`font-bold text-sm ${postAuthor ? "group-hover:text-brand-500 transition-colors" : ""}`}>{openPost.author || "Anonymous"}</p>
+                          <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-wider">
+                            {formatDistanceToNow(new Date(openPost.createdAt || openPost.date))} ago
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })()}
                 </div>
 
                 {openPost.summary && (

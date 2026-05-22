@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from "react";
 import {
   X, UserCheck, UserPlus, MessageSquare, Globe, ExternalLink, AtSign,
-  Heart, Clock, Briefcase, User, FileText, Loader2, Activity
+  Heart, Clock, Briefcase, User, FileText, Loader2, Activity, Camera,
+  MapPin, Calendar, Link2, Check
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 
 interface ProfileModalProps {
   member: any;
@@ -34,17 +35,16 @@ export default function ProfileModal({
   const [posts, setPosts] = useState<any[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [postsFetched, setPostsFetched] = useState(false);
+  const [followHover, setFollowHover] = useState(false);
 
   useEffect(() => {
-    if (activeTab === "posts" && !postsFetched && member._id) {
-      fetchPosts();
-    }
+    if (activeTab === "posts" && !postsFetched && member._id) fetchPosts();
   }, [activeTab]);
 
   const fetchPosts = async () => {
     setLoadingPosts(true);
     try {
-      const res = await fetch(`/api/news?author=${member._id}`);
+      const res = await fetch(`/api/news`);
       if (res.ok) {
         const data = await res.json();
         const authorPosts = Array.isArray(data)
@@ -57,92 +57,139 @@ export default function ProfileModal({
     setPostsFetched(true);
   };
 
-  const gradients: Record<string, string> = {
-    A: "from-rose-500 to-pink-600", B: "from-orange-500 to-amber-600",
-    C: "from-yellow-500 to-lime-600", D: "from-green-500 to-emerald-600",
-    E: "from-teal-500 to-cyan-600", F: "from-sky-500 to-blue-600",
-    G: "from-indigo-500 to-violet-600", H: "from-purple-500 to-fuchsia-600",
-    I: "from-red-500 to-rose-600", J: "from-pink-500 to-red-600",
-    K: "from-amber-500 to-yellow-600", L: "from-lime-500 to-green-600",
-    M: "from-emerald-500 to-teal-600", N: "from-cyan-500 to-sky-600",
-    O: "from-blue-500 to-indigo-600", P: "from-indigo-500 to-purple-600",
-    Q: "from-purple-500 to-fuchsia-600", R: "from-fuchsia-500 to-pink-600",
-    S: "from-rose-500 to-red-600", T: "from-red-500 to-orange-600",
-    U: "from-orange-500 to-yellow-600", V: "from-yellow-500 to-green-600",
-    W: "from-green-500 to-blue-600", X: "from-blue-500 to-purple-600",
-    Y: "from-purple-500 to-red-600", Z: "from-red-500 to-pink-600",
+  // Gradient map for cover + avatar
+  const gradients: Record<string, { cover: string; avatar: string }> = {
+    A: { cover: "from-rose-900/80 via-pink-800/50 to-background",    avatar: "from-rose-500 to-pink-600" },
+    B: { cover: "from-orange-900/80 via-amber-800/50 to-background",  avatar: "from-orange-500 to-amber-600" },
+    C: { cover: "from-yellow-900/80 via-lime-800/50 to-background",   avatar: "from-yellow-500 to-lime-600" },
+    D: { cover: "from-green-900/80 via-emerald-800/50 to-background", avatar: "from-green-500 to-emerald-600" },
+    E: { cover: "from-teal-900/80 via-cyan-800/50 to-background",     avatar: "from-teal-500 to-cyan-600" },
+    F: { cover: "from-sky-900/80 via-blue-800/50 to-background",      avatar: "from-sky-500 to-blue-600" },
+    G: { cover: "from-indigo-900/80 via-violet-800/50 to-background", avatar: "from-indigo-500 to-violet-600" },
+    H: { cover: "from-purple-900/80 via-fuchsia-800/50 to-background",avatar: "from-purple-500 to-fuchsia-600" },
+    J: { cover: "from-pink-900/80 via-red-800/50 to-background",      avatar: "from-pink-500 to-red-600" },
+    M: { cover: "from-emerald-900/80 via-teal-800/50 to-background",  avatar: "from-emerald-500 to-teal-600" },
+    N: { cover: "from-cyan-900/80 via-sky-800/50 to-background",      avatar: "from-cyan-500 to-sky-600" },
+    R: { cover: "from-fuchsia-900/80 via-pink-800/50 to-background",  avatar: "from-fuchsia-500 to-pink-600" },
+    S: { cover: "from-rose-900/80 via-red-800/50 to-background",      avatar: "from-rose-500 to-red-600" },
+    T: { cover: "from-red-900/80 via-orange-800/50 to-background",    avatar: "from-red-500 to-orange-600" },
   };
-  const gradient = gradients[initial] || "from-brand-500 to-brand-700";
+  const g = gradients[initial] || { cover: "from-brand-900/80 via-brand-800/50 to-background", avatar: "from-brand-500 to-brand-700" };
 
   const workExperience = member.workExperience || member.experience || [];
   const education = member.education || [];
+  const joinedDate = member.createdAt ? new Date(member.createdAt) : null;
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-xl" onClick={onClose} />
+    <div className="fixed inset-0 z-[300] flex items-end md:items-center justify-center">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="glass-panel w-full max-w-xl rounded-[2.5rem] border border-card-border relative z-10 shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden flex flex-col max-h-[92vh]">
-        {/* Decorative glows */}
-        <div className="absolute -top-12 -right-12 w-40 h-40 bg-brand-500/10 blur-3xl rounded-full pointer-events-none" />
-        <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-purple-500/10 blur-3xl rounded-full pointer-events-none" />
+      <div className="relative z-10 w-full md:max-w-lg bg-background border border-card-border md:rounded-[2.5rem] rounded-t-[2.5rem] shadow-2xl animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-300 overflow-hidden flex flex-col" style={{ maxHeight: "95dvh" }}>
 
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 z-20 w-9 h-9 rounded-2xl bg-foreground/5 border border-card-border flex items-center justify-center text-foreground/30 hover:text-foreground hover:bg-foreground/10 transition-all active:scale-95"
+          className="absolute top-4 right-4 z-30 w-9 h-9 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-black/60 transition-all active:scale-95"
         >
           <X size={16} />
         </button>
 
-        {/* Header */}
-        <div className="p-7 pb-0 relative z-10">
-          <div className="flex items-center gap-5 mb-5">
-            <div className={`w-20 h-20 rounded-[1.5rem] bg-gradient-to-br ${gradient} flex items-center justify-center text-white text-3xl font-bold shadow-xl overflow-hidden shrink-0`}>
-              {member.avatar ? (
-                <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
-              ) : initial}
-            </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-2xl font-bold text-foreground leading-tight truncate">{member.name}</h2>
-              <p className="text-xs font-bold uppercase tracking-widest text-brand-500 mt-0.5">{member.role || "Community Member"}</p>
-              <div className="flex items-center gap-4 mt-2">
-                <span className="text-xs text-foreground/40 font-bold">
-                  <span className="text-foreground">{(member.followers || []).length}</span> followers
-                </span>
-                <span className="text-xs text-foreground/40 font-bold">
-                  <span className="text-foreground">{(member.following || []).length}</span> following
-                </span>
+        {/* Cover Photo */}
+        <div className={`h-36 bg-gradient-to-b ${g.cover} relative shrink-0`}>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.03),transparent_60%)]" />
+          {/* Pattern overlay */}
+          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 0, transparent 50%)", backgroundSize: "12px 12px" }} />
+        </div>
+
+        {/* Profile section */}
+        <div className="px-5 md:px-6 pb-0 relative shrink-0">
+          {/* Avatar overlapping cover */}
+          <div className="flex items-end justify-between -mt-12 mb-4">
+            <div className="relative">
+              <div className={`w-24 h-24 rounded-full bg-gradient-to-br ${g.avatar} flex items-center justify-center text-white text-3xl font-bold shadow-2xl ring-4 ring-background overflow-hidden`}>
+                {member.avatar ? (
+                  <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
+                ) : initial}
               </div>
+              <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background" />
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex gap-2 mb-1">
+              {member._id !== resolvedCurrentUserId && (
+                <>
+                  <button
+                    onClick={() => onFollow(member._id)}
+                    onMouseEnter={() => setFollowHover(true)}
+                    onMouseLeave={() => setFollowHover(false)}
+                    className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all active:scale-95 ${
+                      isFollowing
+                        ? followHover
+                          ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                          : "bg-foreground/5 text-foreground/60 border border-card-border"
+                        : "bg-brand-500 text-white shadow-lg shadow-brand-500/20 hover:bg-brand-400"
+                    }`}
+                  >
+                    {isFollowing ? <UserCheck size={13} /> : <UserPlus size={13} />}
+                    {isFollowing ? (followHover ? "Unfollow" : "Following") : "Follow"}
+                  </button>
+                  <button
+                    onClick={() => { onMessage(member); onClose(); }}
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-bold bg-foreground/5 text-foreground/70 border border-card-border hover:bg-foreground/10 transition-all active:scale-95"
+                  >
+                    <MessageSquare size={13} /> Message
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Action buttons */}
-          <div className="flex gap-3 mb-5">
-            <button
-              onClick={() => onFollow(member._id)}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-xs font-bold transition-all border active:scale-95 ${
-                isFollowing
-                  ? "bg-foreground/5 text-foreground/50 border-card-border hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20"
-                  : "bg-brand-500 text-white border-brand-400 hover:bg-brand-400 shadow-lg shadow-brand-500/20"
-              }`}
-            >
-              {isFollowing ? <UserCheck size={14} /> : <UserPlus size={14} />}
-              {isFollowing ? "Unfollow" : "Follow"}
-            </button>
-            <button
-              onClick={() => { onMessage(member); onClose(); }}
-              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-xs font-bold bg-foreground/5 text-foreground/70 border border-card-border hover:bg-purple-500/10 hover:text-purple-400 hover:border-purple-500/20 transition-all active:scale-95"
-            >
-              <MessageSquare size={14} /> Message
-            </button>
+          {/* Name & role */}
+          <div className="mb-3">
+            <h2 className="text-xl font-bold text-foreground leading-tight">{member.name}</h2>
+            <p className="text-xs font-bold text-brand-500 mt-0.5 uppercase tracking-widest">{member.role || "Community Member"}</p>
+            {member.bio && (
+              <p className="text-sm text-foreground/60 font-medium mt-2 leading-relaxed line-clamp-2">{member.bio}</p>
+            )}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
+              {member.location && (
+                <span className="flex items-center gap-1 text-xs text-foreground/40 font-medium">
+                  <MapPin size={11} /> {member.location}
+                </span>
+              )}
+              {joinedDate && (
+                <span className="flex items-center gap-1 text-xs text-foreground/40 font-medium">
+                  <Calendar size={11} /> Joined {format(joinedDate, "MMM yyyy")}
+                </span>
+              )}
+              {member.website && (
+                <a href={member.website} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-brand-500 font-medium hover:underline">
+                  <Link2 size={11} /> {member.website.replace(/^https?:\/\//, "")}
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* Stats bar */}
+          <div className="flex border-t border-card-border">
+            {[
+              { label: "Posts", value: postsFetched ? posts.length : "–" },
+              { label: "Followers", value: (member.followers || []).length },
+              { label: "Following", value: (member.following || []).length },
+            ].map((s, i) => (
+              <div key={s.label} className={`flex-1 py-3 text-center ${i > 0 ? "border-l border-card-border" : ""}`}>
+                <p className="text-lg font-black text-foreground">{s.value}</p>
+                <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-widest mt-0.5">{s.label}</p>
+              </div>
+            ))}
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 border-b border-card-border pb-0 -mx-7 px-7">
+          <div className="flex border-b border-card-border -mx-5 md:-mx-6 px-5 md:px-6">
             {[
               { id: "about", label: "About", icon: User },
               { id: "posts", label: "Posts", icon: FileText },
-              { id: "work", label: "Work & Education", icon: Briefcase },
+              { id: "work", label: "Work", icon: Briefcase },
             ].map(tab => {
               const Icon = tab.icon;
               return (
@@ -162,26 +209,17 @@ export default function ProfileModal({
           </div>
         </div>
 
-        {/* Tab Content — scrollable */}
-        <div className="overflow-y-auto flex-1 custom-scrollbar p-7 pt-5 space-y-4">
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto px-5 md:px-6 py-5 space-y-4">
 
-          {/* About Tab */}
+          {/* ABOUT */}
           {activeTab === "about" && (
-            <div className="space-y-5 animate-in fade-in duration-200">
-              {member.bio ? (
-                <div className="p-4 rounded-2xl bg-foreground/[0.02] border border-card-border">
-                  <p className="text-xs font-bold text-foreground/40 uppercase tracking-widest mb-2">Bio</p>
-                  <p className="text-sm text-foreground/70 leading-relaxed">{member.bio}</p>
-                </div>
-              ) : (
-                <div className="p-4 rounded-2xl bg-foreground/[0.02] border border-card-border">
-                  <p className="text-xs text-foreground/30 italic">No bio added yet.</p>
-                </div>
-              )}
-
+            <div className="space-y-4 animate-in fade-in duration-200">
               {(member.skills || []).length > 0 && (
                 <div>
-                  <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest mb-2">Skills</p>
+                  <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
+                    <span className="w-3 h-0.5 bg-brand-500 rounded" /> Skills
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {member.skills.map((skill: string) => (
                       <span key={skill} className="text-[10px] font-bold px-3 py-1.5 rounded-xl bg-brand-500/10 text-brand-400 border border-brand-500/20 uppercase tracking-wide">
@@ -194,75 +232,88 @@ export default function ProfileModal({
 
               {(member.website || member.github || member.twitter) && (
                 <div>
-                  <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest mb-2">Links</p>
-                  <div className="flex flex-wrap gap-3">
+                  <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
+                    <span className="w-3 h-0.5 bg-brand-500 rounded" /> Links
+                  </p>
+                  <div className="space-y-2">
                     {member.website && (
-                      <a href={member.website} target="_blank" rel="noreferrer"
-                        className="flex items-center gap-2 text-xs font-bold text-foreground/50 hover:text-brand-500 transition-colors px-3 py-2 rounded-xl bg-foreground/[0.03] border border-card-border hover:border-brand-500/20">
-                        <Globe size={13} /> Website
+                      <a href={member.website} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 rounded-2xl bg-foreground/[0.03] border border-card-border hover:border-brand-500/20 transition-all group">
+                        <div className="w-8 h-8 rounded-xl bg-brand-500/10 flex items-center justify-center text-brand-500 shrink-0"><Globe size={14} /></div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-foreground/70 group-hover:text-brand-500 transition-colors truncate">{member.website.replace(/^https?:\/\//, "")}</p>
+                          <p className="text-[9px] text-foreground/30 font-bold uppercase tracking-wider">Website</p>
+                        </div>
+                        <ExternalLink size={12} className="text-foreground/20 group-hover:text-brand-500 transition-colors shrink-0" />
                       </a>
                     )}
                     {member.github && (
-                      <a href={`https://github.com/${member.github}`} target="_blank" rel="noreferrer"
-                        className="flex items-center gap-2 text-xs font-bold text-foreground/50 hover:text-foreground transition-colors px-3 py-2 rounded-xl bg-foreground/[0.03] border border-card-border hover:border-foreground/20">
-                        <ExternalLink size={13} /> GitHub
+                      <a href={`https://github.com/${member.github}`} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 rounded-2xl bg-foreground/[0.03] border border-card-border hover:border-foreground/20 transition-all group">
+                        <div className="w-8 h-8 rounded-xl bg-foreground/5 flex items-center justify-center shrink-0"><ExternalLink size={14} className="text-foreground/60" /></div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-foreground/70 truncate">@{member.github}</p>
+                          <p className="text-[9px] text-foreground/30 font-bold uppercase tracking-wider">GitHub</p>
+                        </div>
                       </a>
                     )}
                     {member.twitter && (
-                      <a href={`https://twitter.com/${member.twitter}`} target="_blank" rel="noreferrer"
-                        className="flex items-center gap-2 text-xs font-bold text-foreground/50 hover:text-sky-400 transition-colors px-3 py-2 rounded-xl bg-foreground/[0.03] border border-card-border hover:border-sky-400/20">
-                        <AtSign size={13} /> Twitter
+                      <a href={`https://twitter.com/${member.twitter}`} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 rounded-2xl bg-foreground/[0.03] border border-card-border hover:border-sky-400/20 transition-all group">
+                        <div className="w-8 h-8 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-400 shrink-0"><AtSign size={14} /></div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-foreground/70 truncate">@{member.twitter}</p>
+                          <p className="text-[9px] text-foreground/30 font-bold uppercase tracking-wider">Twitter / X</p>
+                        </div>
                       </a>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* Stats row */}
-              <div className="grid grid-cols-3 gap-3 pt-2">
-                {[
-                  { label: "Posts", value: posts.length || "–" },
-                  { label: "Followers", value: (member.followers || []).length },
-                  { label: "Following", value: (member.following || []).length },
-                ].map(s => (
-                  <div key={s.label} className="p-3 rounded-2xl bg-foreground/[0.02] border border-card-border text-center">
-                    <p className="text-xl font-bold text-foreground">{s.value}</p>
-                    <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-widest mt-0.5">{s.label}</p>
+              {member.tier && (
+                <div className="flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-brand-500/5 to-purple-500/5 border border-brand-500/15">
+                  <div className="w-10 h-10 rounded-2xl bg-brand-500/10 flex items-center justify-center text-brand-500 shrink-0">
+                    <Check size={18} />
                   </div>
-                ))}
-              </div>
+                  <div>
+                    <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest">Membership</p>
+                    <p className="font-bold text-sm text-foreground capitalize mt-0.5">{member.tier} Tier</p>
+                  </div>
+                </div>
+              )}
+
+              {!member.bio && !member.skills?.length && !member.website && !member.github && !member.twitter && (
+                <div className="py-12 text-center opacity-30">
+                  <User size={32} className="mx-auto mb-3" />
+                  <p className="text-sm font-bold">No profile info yet</p>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Posts Tab */}
+          {/* POSTS */}
           {activeTab === "posts" && (
-            <div className="space-y-4 animate-in fade-in duration-200">
+            <div className="space-y-3 animate-in fade-in duration-200">
               {loadingPosts ? (
                 <div className="py-12 flex flex-col items-center gap-3">
                   <Loader2 size={24} className="animate-spin text-brand-500" />
-                  <p className="text-[10px] text-foreground/30 font-bold uppercase tracking-widest">Loading posts...</p>
+                  <p className="text-[10px] text-foreground/30 font-bold uppercase tracking-widest">Loading…</p>
                 </div>
               ) : posts.length === 0 ? (
-                <div className="py-12 text-center">
-                  <Activity size={32} className="mx-auto mb-3 text-foreground/10" />
-                  <p className="text-sm text-foreground/30 font-semibold">No public posts yet</p>
-                  <p className="text-xs text-foreground/20 mt-1">Posts {member.name} publishes will appear here.</p>
+                <div className="py-12 text-center opacity-30">
+                  <Activity size={32} className="mx-auto mb-3" />
+                  <p className="text-sm font-bold">No posts yet</p>
                 </div>
               ) : (
                 posts.map(post => (
-                  <div key={post._id} className="p-4 rounded-2xl border border-card-border hover:border-brand-500/20 transition-all group">
+                  <div key={post._id} className="p-4 rounded-2xl border border-card-border hover:border-brand-500/20 transition-all group bg-foreground/[0.01]">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-[9px] font-bold text-brand-500/70 bg-brand-500/10 border border-brand-500/15 px-2 py-1 rounded-lg uppercase tracking-widest">{post.category}</span>
-                      <span className="text-[9px] text-foreground/25 font-bold">
-                        {post.createdAt ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }) : ""}
-                      </span>
+                      <span className="text-[9px] text-foreground/25 font-bold">{post.createdAt ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }) : ""}</span>
                     </div>
                     <h4 className="font-bold text-sm text-foreground group-hover:text-brand-500 transition-colors mb-1 leading-tight">{post.title}</h4>
                     {post.summary && <p className="text-xs text-foreground/45 italic">"{post.summary}"</p>}
-                    {post.content && <p className="text-xs text-foreground/35 mt-2 line-clamp-2">{post.content}</p>}
                     {(post.likes?.length || 0) > 0 && (
-                      <div className="flex items-center gap-1.5 mt-3 text-[9px] font-bold text-brand-500">
-                        <Heart size={11} className="fill-brand-500" /> {post.likes.length} Neural Pulses
+                      <div className="flex items-center gap-1.5 mt-3 text-[9px] font-bold text-pink-500">
+                        <Heart size={11} className="fill-pink-500" /> {post.likes.length} Likes
                       </div>
                     )}
                   </div>
@@ -271,77 +322,67 @@ export default function ProfileModal({
             </div>
           )}
 
-          {/* Work & Education Tab */}
+          {/* WORK */}
           {activeTab === "work" && (
             <div className="space-y-5 animate-in fade-in duration-200">
-              {/* Work Experience */}
               <div>
-                <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest mb-3 flex items-center gap-2">
-                  <Briefcase size={11} /> Work Experience
+                <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                  <span className="w-3 h-0.5 bg-brand-500 rounded" /> Work Experience
                 </p>
                 {workExperience.length > 0 ? (
                   <div className="space-y-3">
                     {workExperience.map((exp: any, i: number) => (
-                      <div key={i} className="p-4 rounded-2xl bg-foreground/[0.02] border border-card-border">
-                        <p className="font-bold text-sm text-foreground">{exp.title || exp.position}</p>
-                        <p className="text-xs text-brand-500 font-semibold mt-0.5">{exp.company}</p>
-                        {(exp.from || exp.startDate) && (
-                          <p className="text-[9px] text-foreground/30 font-bold mt-1 uppercase tracking-wider">
-                            {exp.from || exp.startDate} — {exp.to || exp.endDate || "Present"}
-                          </p>
-                        )}
-                        {exp.description && <p className="text-xs text-foreground/45 mt-2 leading-relaxed">{exp.description}</p>}
+                      <div key={i} className="flex gap-3 p-4 rounded-2xl bg-foreground/[0.02] border border-card-border">
+                        <div className="w-10 h-10 rounded-2xl bg-brand-500/10 flex items-center justify-center text-brand-500 shrink-0 mt-0.5">
+                          <Briefcase size={16} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-sm text-foreground">{exp.title || exp.position}</p>
+                          <p className="text-xs text-brand-500 font-semibold mt-0.5">{exp.company}</p>
+                          {(exp.from || exp.startDate) && (
+                            <p className="text-[9px] text-foreground/30 font-bold mt-1 uppercase tracking-wider">
+                              {exp.from || exp.startDate} — {exp.to || exp.endDate || "Present"}
+                            </p>
+                          )}
+                          {exp.description && <p className="text-xs text-foreground/45 mt-2 leading-relaxed">{exp.description}</p>}
+                        </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="p-4 rounded-2xl bg-foreground/[0.02] border border-card-border">
-                    <p className="text-xs text-foreground/30 italic">No work experience listed yet.</p>
-                  </div>
+                  <p className="text-xs text-foreground/30 italic p-4 rounded-2xl bg-foreground/[0.02] border border-card-border">No work experience listed yet.</p>
                 )}
               </div>
 
-              {/* Education */}
               <div>
-                <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest mb-3 flex items-center gap-2">
-                  <FileText size={11} /> Education
+                <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                  <span className="w-3 h-0.5 bg-purple-500 rounded" /> Education
                 </p>
                 {education.length > 0 ? (
                   <div className="space-y-3">
                     {education.map((edu: any, i: number) => (
-                      <div key={i} className="p-4 rounded-2xl bg-foreground/[0.02] border border-card-border">
-                        <p className="font-bold text-sm text-foreground">{edu.degree || edu.field}</p>
-                        <p className="text-xs text-brand-500 font-semibold mt-0.5">{edu.school || edu.institution}</p>
-                        {(edu.from || edu.startYear) && (
-                          <p className="text-[9px] text-foreground/30 font-bold mt-1 uppercase tracking-wider">
-                            {edu.from || edu.startYear} — {edu.to || edu.endYear || "Present"}
-                          </p>
-                        )}
+                      <div key={i} className="flex gap-3 p-4 rounded-2xl bg-foreground/[0.02] border border-card-border">
+                        <div className="w-10 h-10 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-500 shrink-0 mt-0.5">
+                          <FileText size={16} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm text-foreground">{edu.degree || edu.field}</p>
+                          <p className="text-xs text-purple-500 font-semibold mt-0.5">{edu.school || edu.institution}</p>
+                          {(edu.from || edu.startYear) && (
+                            <p className="text-[9px] text-foreground/30 font-bold mt-1 uppercase tracking-wider">
+                              {edu.from || edu.startYear} — {edu.to || edu.endYear || "Present"}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="p-4 rounded-2xl bg-foreground/[0.02] border border-card-border">
-                    <p className="text-xs text-foreground/30 italic">No education listed yet.</p>
-                  </div>
+                  <p className="text-xs text-foreground/30 italic p-4 rounded-2xl bg-foreground/[0.02] border border-card-border">No education listed yet.</p>
                 )}
               </div>
-
-              {/* Tier badge */}
-              {member.tier && (
-                <div className="p-4 rounded-2xl bg-foreground/[0.02] border border-card-border flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-brand-500/10 flex items-center justify-center">
-                    <Briefcase size={16} className="text-brand-500" />
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest">Membership Tier</p>
-                    <p className="font-bold text-sm text-foreground capitalize mt-0.5">{member.tier}</p>
-                  </div>
-                </div>
-              )}
             </div>
           )}
-
         </div>
       </div>
     </div>

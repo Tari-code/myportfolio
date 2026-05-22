@@ -7,6 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 
 // Sub-components for tabs
+import PushPermission from "@/components/PushPermission";
 import PlaygroundContent from "./PlaygroundContent";
 import CommsContent from "./CommsContent";
 import CommunityContent from "./CommunityContent";
@@ -693,6 +694,7 @@ Please get in touch to confirm specifications and begin engineering.`;
           </div>
         </div>
 
+        <PushPermission />
         <TabSwitcher activeTab={activeTab} setActiveTab={(tab) => { setActiveTab(tab); if (tab === "notifications") setTimeout(fetchNotifCount, 1000); }} unreadCount={unreadCount} notifCount={notifCount} />
 
         {/* Verification Alert */}

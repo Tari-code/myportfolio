@@ -38,3 +38,6 @@ externalPort = 80
 
 [userenv.shared]
 JWT_SECRET = "9e7dbded260b2947ee2ca621b0d162eaa5bc05d61d4ed7051ad389f14ba02c20"
+VAPID_PUBLIC_KEY = "BBy6lOoUB5gH-wR6uUS2cn61_MW_4AYcDg1p5lCy-E5yTRKbijh-obOfFqqoUkzAcdFFLbmAL5LRXXK5UOqmqXA"
+VAPID_PRIVATE_KEY = "n26t-EkDiF2LIgS8kbJjIxJmVXGM2D-UGMq7cQBYRaY"
+VAPID_EMAIL = "mailto:admin@taritech.dev"
