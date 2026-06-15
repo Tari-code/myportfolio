@@ -3,11 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ArrowRight, Code, Palette, Zap, CheckCircle2, Mail, Phone, MapPin, Sparkles, Globe, Cpu, Target, Shield } from "lucide-react";
+import { ArrowRight, Code, Palette, Zap, CheckCircle2, Sparkles, Globe, Cpu, Target, Shield } from "lucide-react";
 import Link from "next/link";
-import PortfolioItem from "@/components/PortfolioItem";
+import PortfolioItem, { type PortfolioItemProps } from "@/components/PortfolioItem";
+
+type PortfolioCard = PortfolioItemProps & { id?: string | number };
 import TestimonialsSection from "@/components/TestimonialsSection";
 import ParticleField from "@/components/ParticleField";
+import ThreeDreamscape from "@/components/ThreeDreamscape";
 import TiltCard from "@/components/TiltCard";
 
 if (typeof window !== "undefined") {
@@ -15,7 +18,7 @@ if (typeof window !== "undefined") {
 }
 
 export default function Home() {
-  const [portfolioData, setPortfolioData] = useState<any[]>([]);
+  const [portfolioData, setPortfolioData] = useState<PortfolioCard[]>([]);
   const heroRef = useRef<HTMLDivElement>(null);
   const heroTextRef = useRef<HTMLDivElement>(null);
   const servicesRef = useRef<HTMLDivElement>(null);
@@ -25,7 +28,7 @@ export default function Home() {
   useEffect(() => {
     fetch("/api/portfolio")
       .then(res => res.json())
-      .then(data => {
+      .then((data: PortfolioCard[]) => {
         setPortfolioData(data);
         setTimeout(() => ScrollTrigger.refresh(), 100);
       })
@@ -33,9 +36,9 @@ export default function Home() {
 
     const ctx = gsap.context(() => {
       // 3D Tilt Effect for Service Cards
-      const cards = document.querySelectorAll(".service-card");
+      const cards = document.querySelectorAll<HTMLElement>(".service-card");
       cards.forEach((card) => {
-        card.addEventListener("mousemove", (e: any) => {
+        card.addEventListener("mousemove", (e: MouseEvent) => {
           const rect = card.getBoundingClientRect();
           const x = e.clientX - rect.left;
           const y = e.clientY - rect.top;
@@ -86,7 +89,7 @@ export default function Home() {
       });
 
       // Reveal Animations
-      gsap.utils.toArray(".reveal").forEach((elem: any) => {
+      gsap.utils.toArray<HTMLElement>(".reveal").forEach((elem) => {
         gsap.from(elem, {
           y: 60,
           opacity: 0,
@@ -101,8 +104,8 @@ export default function Home() {
       });
 
       // Stats Count-up Animation
-      gsap.utils.toArray(".stat-number").forEach((elem: any) => {
-        const target = parseFloat(elem.dataset.target);
+      gsap.utils.toArray<HTMLElement>(".stat-number").forEach((elem) => {
+        const target = Number(elem.dataset.target ?? 0);
         gsap.to(elem, {
           innerText: target,
           duration: 2,
@@ -121,8 +124,9 @@ export default function Home() {
 
   return (
     <main className="min-h-screen relative selection:bg-brand-500/30 overflow-x-hidden">
-      {/* Particle Layer */}
+      {/* Particle + 3D Layers */}
       <ParticleField />
+      <ThreeDreamscape />
 
       {/* Background Gradients & Grid */}
       <div className="fixed inset-0 -z-10 bg-background overflow-hidden">
@@ -138,14 +142,14 @@ export default function Home() {
           <div ref={heroTextRef} className="relative z-10 text-center lg:text-left">
             <div className="reveal inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-500 text-xs font-bold mb-8 backdrop-blur-xl shadow-lg">
               <Sparkles size={14} className="animate-spin-slow" /> 
-              Pioneering the Digital Frontier
+              Living World • Interactive Tech Ecosystem
             </div>
             <h1 className="reveal text-6xl md:text-8xl font-display font-bold leading-[0.95] tracking-tighter mb-8 text-foreground">
-              Engineering <br />
-              <span className="text-gradient">Possibilities</span>
+              A Dreamscape of <br />
+              <span className="text-gradient">Digital Exploration</span>
             </h1>
             <p className="reveal text-lg md:text-xl text-foreground/80 max-w-xl mb-12 leading-relaxed mx-auto lg:mx-0 font-medium">
-              We weave sophisticated code into seamless digital experiences, leveraging AI and cutting-edge engineering to define the next era of business.
+              We sculpt immersive, living interfaces where motion, depth, and intelligent systems blend into a world you can feel as you scroll through it.
             </p>
             <div className="reveal flex flex-col sm:flex-row gap-6 justify-center lg:justify-start">
               <Link href="/projects" className="group relative px-10 py-5 rounded-2xl bg-brand-600 text-white font-bold transition-all hover:scale-105 shadow-2xl shadow-brand-600/20 active:scale-95 overflow-hidden">
@@ -190,7 +194,7 @@ export default function Home() {
           <div className="reveal mb-12 md:mb-20 text-center lg:text-left">
             <h2 className="text-4xl md:text-7xl font-display font-bold mb-4 md:mb-6 tracking-tighter">Capabilities</h2>
             <p className="text-foreground/80 max-w-2xl text-base md:text-lg leading-relaxed font-medium">
-              We combine deep technical expertise with radical creativity to deliver solutions that aren't just built, but engineered for impact.
+              We combine deep technical expertise with radical creativity to deliver solutions that are not just built, but engineered for impact.
             </p>
           </div>
           

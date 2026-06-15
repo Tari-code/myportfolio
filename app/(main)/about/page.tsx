@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ArrowRight, Target, Zap, Globe, Shield, Star, MessageSquare, Send, Quote, User, Briefcase, ChevronRight, CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
+import ThreeDreamscape from "@/components/ThreeDreamscape";
 
 export default function AboutPage() {
   const [reviews, setReviews] = useState<any[]>([]);
@@ -54,6 +55,7 @@ export default function AboutPage() {
 
   return (
     <div className="pt-32 pb-20 px-6 max-w-7xl mx-auto min-h-screen relative overflow-hidden">
+      <ThreeDreamscape />
       {/* Fixed Toast Notification */}
       {toast && (
         <div
@@ -75,10 +77,10 @@ export default function AboutPage() {
       {/* Hero Section */}
       <div className="max-w-4xl mx-auto text-center mb-24 relative z-10">
         <h1 className="text-4xl sm:text-6xl md:text-8xl font-display font-bold text-foreground mb-8 tracking-tighter">
-          About <span className="text-gradient">Tari Tech</span>
+          Explore the <span className="text-gradient">Living World</span> of Tari Tech
         </h1>
         <p className="text-xl md:text-2xl text-foreground/80 leading-relaxed font-medium">
-          A multi-dimensional technology organization dedicated to engineering the future. We bridge the gap between complex innovation and human-centric digital experiences.
+          A layered digital ecosystem built for wonder, clarity, and momentum. We turn ambitious ideas into immersive experiences that feel cinematic, intelligent, and alive.
         </p>
       </div>
 

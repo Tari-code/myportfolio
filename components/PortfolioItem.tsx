@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-interface PortfolioItemProps {
+export interface PortfolioItemProps {
   title: string;
   slug: string;
   category: string;
