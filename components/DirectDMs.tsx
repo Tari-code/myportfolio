@@ -144,7 +144,7 @@ export default function DirectDMs({
 
   return (
     <div
-      className="flex rounded-[2.5rem] overflow-hidden border border-card-border bg-foreground/[0.01] shadow-2xl relative"
+      className="flex rounded-[2.5rem] overflow-hidden border border-card-border bg-foreground/[0.01] shadow-2xl relative backdrop-blur-xl"
       style={{ minHeight: isMobile ? "calc(100dvh - 220px)" : "560px", maxHeight: isMobile ? "calc(100dvh - 220px)" : "680px" }}
     >
       {/* ── Conversation list ── */}
@@ -152,7 +152,7 @@ export default function DirectDMs({
         <div className={`${isMobile ? "w-full absolute inset-0 z-10" : "w-80 shrink-0"} flex flex-col border-r border-card-border bg-foreground/[0.02]`}>
           <div className="px-5 py-4 border-b border-card-border bg-foreground/[0.03] flex items-center justify-between shrink-0">
             <div>
-              <span className="text-[10px] font-bold text-brand-500 uppercase tracking-widest block mb-0.5">Messages</span>
+              <span className="text-[10px] font-bold text-brand-500 uppercase tracking-widest block mb-0.5">Secure Messages</span>
               <span className="text-sm font-bold text-foreground/80">{conversations.length} Conversation{conversations.length !== 1 ? "s" : ""}</span>
             </div>
             <div className="w-8 h-8 rounded-xl bg-brand-500/10 flex items-center justify-center text-brand-500">

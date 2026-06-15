@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Zap, Crown, Star, Globe, Shield, TrendingUp, Clock, MessageSquare,
   Newspaper, Users, Bell, CheckCircle2, AlertTriangle, ArrowRight,
@@ -44,6 +45,7 @@ const NOTIF_ICONS: Record<string, { icon: any; color: string; bg: string }> = {
 };
 
 export default function OverviewContent({ user, tickets, userNews, onSwitchTab }: Props) {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loadingNotifs, setLoadingNotifs] = useState(true);
@@ -83,6 +85,24 @@ export default function OverviewContent({ user, tickets, userNews, onSwitchTab }
     });
     setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
     setUnreadCount(prev => Math.max(0, prev - 1));
+  };
+
+  const handleOpenNotification = async (notif: Notification) => {
+    if (!notif.read) await markOneRead(notif._id);
+    if (!notif.link) return;
+
+    if (notif.link.startsWith("/dashboard?tab=")) {
+      const tab = notif.link.split("tab=")[1]?.split("&")[0];
+      if (tab) onSwitchTab(tab);
+      return;
+    }
+
+    if (notif.link.startsWith("/")) {
+      router.push(notif.link);
+      return;
+    }
+
+    window.open(notif.link, "_blank", "noopener,noreferrer");
   };
 
   const tier = user?.tier || "free";
@@ -326,10 +346,11 @@ export default function OverviewContent({ user, tickets, userNews, onSwitchTab }
                   const cfg = NOTIF_ICONS[notif.type] || NOTIF_ICONS.system;
                   const Icon = cfg.icon;
                   return (
-                    <div
+                    <button
                       key={notif._id}
-                      onClick={() => !notif.read && markOneRead(notif._id)}
-                      className={`flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer ${notif.read ? "border-card-border bg-transparent opacity-50" : "border-brand-500/15 bg-brand-500/[0.03] hover:bg-brand-500/5"}`}
+                      type="button"
+                      onClick={() => handleOpenNotification(notif)}
+                      className={`w-full flex items-start gap-3 p-3 rounded-xl border text-left transition-all cursor-pointer ${notif.read ? "border-card-border bg-foreground/[0.02] hover:bg-foreground/[0.04]" : "border-brand-500/15 bg-brand-500/[0.03] hover:bg-brand-500/5"}`}
                     >
                       <div className={`w-7 h-7 rounded-lg ${cfg.bg} flex items-center justify-center ${cfg.color} shrink-0`}>
                         <Icon size={12} />
@@ -341,7 +362,7 @@ export default function OverviewContent({ user, tickets, userNews, onSwitchTab }
                       {!notif.read && (
                         <div className="w-2 h-2 rounded-full bg-brand-500 shrink-0 mt-1" />
                       )}
-                    </div>
+                    </button>
                   );
                 })}
               </div>

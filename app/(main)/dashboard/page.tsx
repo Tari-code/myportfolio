@@ -691,14 +691,16 @@ Please get in touch to confirm specifications and begin engineering.`;
               <Zap size={14} className="text-white fill-white" />
             </div>
           </div>
-          <div className="text-center md:text-left">
-            <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-3 tracking-tight">
-              Hello, <span className="text-brand-500">{user.name.split(' ')[0]}</span>!
-            </h1>
-            <p className="text-foreground/60 text-base md:text-lg font-medium tracking-wide max-w-2xl">
-              Welcome to your digital command center. Monitor your projects, configure cybernetic blueprints, and manage your account.
-            </p>
-          </div>
+          {activeTab === "overview" && (
+            <div className="text-center md:text-left">
+              <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-3 tracking-tight">
+                Hello, <span className="text-brand-500">{user.name.split(' ')[0]}</span>!
+              </h1>
+              <p className="text-foreground/60 text-base md:text-lg font-medium tracking-wide max-w-2xl">
+                Welcome to your digital command center. Monitor your projects, configure cybernetic blueprints, and manage your account.
+              </p>
+            </div>
+          )}
         </div>
 
         <PushPermission />

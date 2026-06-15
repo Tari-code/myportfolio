@@ -274,6 +274,19 @@ export default function CommunityContent({
 
       {/* Content */}
       <div className="relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {[
+            { label: "Live pulse", value: "92%", hint: "active community engagement" },
+            { label: "Trending topics", value: "AI + Web", hint: "top posts this week" },
+            { label: "New ideas", value: "14", hint: "fresh discussions today" },
+          ].map((item) => (
+            <div key={item.label} className="glass-panel rounded-[1.6rem] border border-card-border p-4 bg-gradient-to-br from-brand-500/[0.04] to-transparent">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-foreground/35 font-black">{item.label}</p>
+              <p className="text-2xl font-black text-foreground mt-1">{item.value}</p>
+              <p className="text-[10px] text-foreground/45 font-semibold mt-1">{item.hint}</p>
+            </div>
+          ))}
+        </div>
 
         {/* Feed Tab */}
         {activeSubTab === "feed" && (

@@ -119,7 +119,7 @@ export async function sendAdminNewUserAlert(userName: string, userEmail: string,
     await transporter.sendMail({
       from: `"Tari Alert System" <${process.env.EMAIL_USER}>`,
       to: process.env.EMAIL_USER,
-      subject: `⚡ New User: ${userName} just registered on Tari`,
+      subject: `New User: ${userName} just registered on Tari`,
       html,
     });
   } catch (err) {

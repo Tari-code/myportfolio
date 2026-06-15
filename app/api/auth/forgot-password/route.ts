@@ -31,7 +31,7 @@ export async function POST(req: Request) {
 
     const baseUrl = process.env.REPLIT_DEV_DOMAIN
       ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-      : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
+      : process.env.NEXT_PUBLIC_BASE_URL || "https://taritech.vercel.app";
 
     const resetUrl = `${baseUrl}/customer/reset-password?token=${token}`;
 

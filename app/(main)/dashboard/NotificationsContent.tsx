@@ -101,13 +101,17 @@ export default function NotificationsContent({ onNavigate }: Props) {
     if (!notif.link) return;
 
     if (notif.link.startsWith("/dashboard?tab=")) {
-      const tab = notif.link.split("tab=")[1];
-      if (onNavigate) onNavigate(tab);
-    } else if (notif.link.startsWith("/")) {
-      router.push(notif.link);
-    } else {
-      window.open(notif.link, "_blank");
+      const tab = notif.link.split("tab=")[1]?.split("&")[0];
+      if (onNavigate && tab) onNavigate(tab);
+      return;
     }
+
+    if (notif.link.startsWith("/")) {
+      router.push(notif.link);
+      return;
+    }
+
+    window.open(notif.link, "_blank", "noopener,noreferrer");
   };
 
   const filtered = filter === "all" ? notifications : notifications.filter(n => n.type === filter);
@@ -202,7 +206,7 @@ export default function NotificationsContent({ onNavigate }: Props) {
                 onClick={() => handleNotifClick(notif)}
                 className={`w-full text-left glass-panel flex items-start gap-4 p-5 rounded-[1.5rem] border transition-all group hover:scale-[1.005] active:scale-[0.998] ${
                   notif.read
-                    ? "border-card-border opacity-60 hover:opacity-80"
+                    ? "border-card-border bg-foreground/[0.02] hover:bg-foreground/[0.04]"
                     : `${cfg.border} bg-gradient-to-r from-background to-transparent`
                 }`}
               >
