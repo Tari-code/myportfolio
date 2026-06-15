@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getSession, updateSession } from "@/lib/auth";
 import connectDB from "@/lib/mongodb";
 import User from "@/lib/models/User";
 
@@ -95,6 +95,29 @@ export async function POST(req: Request) {
       });
     }
 
+    if (action === "upgradeTier") {
+      const allowedTiers = ["pro", "elite", "business"];
+      const { tier } = body;
+
+      if (!allowedTiers.includes(tier)) {
+        return NextResponse.json({ error: "Invalid tier selected" }, { status: 400 });
+      }
+
+      const updatedUser = await User.findByIdAndUpdate(
+        currentUserId,
+        { $set: { tier } },
+        { new: true }
+      ).select("-password");
+
+      if (!updatedUser) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+
+      await updateSession({ tier: updatedUser.tier });
+
+      return NextResponse.json({ success: true, user: updatedUser });
+    }
+
     if (action === "updateProfile") {
       const { bio, skills, name, avatar } = body;
       const updatedUser = await User.findByIdAndUpdate(
@@ -109,6 +132,29 @@ export async function POST(req: Request) {
         },
         { new: true }
       ).select("-password");
+
+      return NextResponse.json({ success: true, user: updatedUser });
+    }
+
+    if (action === "upgradeTier") {
+      const { tier } = body;
+      const allowedTiers = ["free", "pro", "elite", "business"];
+
+      if (!allowedTiers.includes(tier)) {
+        return NextResponse.json({ error: "Invalid tier" }, { status: 400 });
+      }
+
+      const updatedUser = await User.findByIdAndUpdate(
+        currentUserId,
+        { $set: { tier } },
+        { new: true }
+      ).select("-password");
+
+      if (!updatedUser) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+
+      await updateSession({ tier: updatedUser.tier });
 
       return NextResponse.json({ success: true, user: updatedUser });
     }

@@ -176,7 +176,7 @@ export default function DirectDMs({
                 return (
                   <button
                     key={conv._id ?? i}
-                    onClick={() => setActiveUser(other)}  
+                    onClick={() => setActiveUser(other)}
                     className={`w-full text-left px-3 py-3 rounded-2xl transition-all flex items-center gap-3 relative group active:scale-[0.98] ${
                       isActive
                         ? "bg-brand-500/10 border border-brand-500/20 shadow-lg shadow-brand-500/5"
@@ -215,13 +215,15 @@ export default function DirectDMs({
 
       {/* ── Chat pane ── */}
       {showChat && (
-        <div className={`${isMobile ? "absolute inset-0 z-20" : "flex-1"} flex flex-col overflow-hidden`}
+        <div className={`${isMobile ? "absolute inset-0 z-20" : "flex-1"} flex flex-col overflow-hidden bg-background/50 backdrop-blur-sm relative`}
           style={{ background: "var(--background)" }}>
 
           {activeUser ? (
             <>
+              <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)", backgroundSize: "24px 24px" }} />
+
               {/* Header */}
-              <div className="px-4 py-3 border-b border-card-border bg-foreground/[0.02] flex items-center gap-3 shrink-0">
+              <div className="px-4 py-3 border-b border-card-border bg-foreground/[0.02] flex items-center gap-3 shrink-0 relative z-10">
                 {isMobile && (
                   <button onClick={() => setActiveUser(null)} className="p-2 rounded-xl hover:bg-foreground/10 text-foreground/60 transition-all -ml-1 shrink-0">
                     <ArrowLeft size={20} />
@@ -252,7 +254,11 @@ export default function DirectDMs({
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1 relative">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 relative z-10">
+                <div className="flex flex-col items-center mb-6">
+                  <div className="h-px w-full bg-gradient-to-r from-transparent via-card-border to-transparent mb-3" />
+                  <span className="text-[9px] font-bold text-foreground/20 uppercase tracking-[0.3em] bg-background px-4 -mt-5">Conversation Started</span>
+                </div>
                 {loading ? (
                   <div className="flex flex-col items-center justify-center h-full gap-3">
                     <div className="w-8 h-8 border-2 border-brand-500/20 border-t-brand-500 rounded-full animate-spin" />
@@ -302,10 +308,10 @@ export default function DirectDMs({
                             </div>
                           )}
 
-                          <div className={`max-w-[72%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                          <div className={`max-w-[82%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
                             {/* Bubble */}
                             <div
-                              className={`px-4 py-2.5 text-sm leading-relaxed font-medium break-words ${
+                              className={`px-4 py-3 text-sm leading-relaxed font-medium break-words ${
                                 isMe
                                   ? `bg-gradient-to-br from-brand-600 to-brand-500 text-white shadow-md shadow-brand-500/15 ${
                                       isFirstInGroup ? "rounded-[1.4rem] rounded-br-md" : isLastInGroup ? "rounded-[1.4rem] rounded-tr-sm rounded-br-md" : "rounded-[1.4rem] rounded-r-md"
@@ -383,7 +389,7 @@ export default function DirectDMs({
               )}
 
               {/* Input */}
-              <div className="p-3 md:p-4 border-t border-card-border bg-foreground/[0.02] shrink-0">
+              <div className="p-3 md:p-4 border-t border-card-border bg-foreground/[0.02] shrink-0 relative z-10">
                 <form onSubmit={onSend} className="flex gap-2 items-center">
                   {currentUser && (
                     <Avatar name={currentUser?.name} avatar={currentUser?.avatar} size="sm" />

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   Zap, Crown, Star, Globe, Shield, TrendingUp, Clock, MessageSquare,
   Newspaper, Users, Bell, CheckCircle2, AlertTriangle, ArrowRight,
-  Activity, Award, Sparkles, Calendar, Hash, ChevronRight, Loader2, X
+  Activity, Award, Sparkles, Calendar, Hash, ChevronRight, Loader2, X,
+  Rocket
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
@@ -171,6 +172,33 @@ export default function OverviewContent({ user, tickets, userNews, onSwitchTab }
           );
         })}
       </div>
+
+      <section className="glass-panel p-6 rounded-[2.5rem] border border-card-border relative overflow-hidden">
+        <div className="flex items-center justify-between gap-3 mb-5">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-foreground/40">New platform features</p>
+            <h3 className="text-xl font-black text-foreground mt-1">Fresh tools to move faster</h3>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            { title: "AI Copilot", desc: "Generate launch copy, summaries, and smart replies in seconds.", icon: Sparkles, tint: "text-brand-500" },
+            { title: "Automation Studio", desc: "Set up repeatable flows for DMs, tickets, and community updates.", icon: Activity, tint: "text-green-400" },
+            { title: "Insight Pulse", desc: "Track growth, engagement, and account health from one dashboard.", icon: TrendingUp, tint: "text-purple-400" },
+            { title: "Smart Briefs", desc: "Turn updates into polished weekly briefs for your team and clients.", icon: Newspaper, tint: "text-amber-400" },
+            { title: "Secure Sync", desc: "Keep your profile, tickets, and messages in perfect harmony.", icon: Shield, tint: "text-blue-400" },
+            { title: "Launch Ready", desc: "Deploy fast with premium templates, analytics, and quick action paths.", icon: Rocket, tint: "text-pink-400" },
+          ].map(({ title, desc, icon: Icon, tint }) => (
+            <article key={title} className="rounded-[1.8rem] border border-card-border bg-foreground/[0.02] p-5 hover:border-brand-500/20 hover:bg-brand-500/[0.03] transition-all">
+              <div className={`w-10 h-10 rounded-2xl bg-foreground/5 flex items-center justify-center ${tint} mb-4`}>
+                <Icon size={18} />
+              </div>
+              <h4 className="text-sm font-black text-foreground">{title}</h4>
+              <p className="text-xs text-foreground/55 mt-1 leading-relaxed">{desc}</p>
+            </article>
+          ))}
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 

@@ -13,7 +13,7 @@
   --color-card-border: var(--card-border);
 
   --font-sans: var(--font-inter);
-  --font-display: var(--font-outfit);
+  --font-display: "Deltha", "Gondens Demo", "Equinox", "Segoe Print", "Brush Script MT", cursive;
 
   --animate-gradient-x: gradient-x 6s ease infinite;
 }

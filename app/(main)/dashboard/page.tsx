@@ -679,18 +679,20 @@ Please get in touch to confirm specifications and begin engineering.`;
       <div className="container mx-auto max-w-7xl">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 mb-12">
-          <div className="relative group">
-            <div className="w-24 h-24 md:w-32 md:h-32 rounded-[2.5rem] bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white text-4xl md:text-5xl font-bold shadow-2xl shadow-brand-500/30 ring-4 ring-background overflow-hidden transition-transform duration-500 group-hover:scale-105">
-              {user.avatar ? (
-                <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-              ) : (
-                user.name.charAt(0).toUpperCase()
-              )}
+          {activeTab === "overview" && (
+            <div className="relative group">
+              <div className="w-24 h-24 md:w-32 md:h-32 rounded-[2.5rem] bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white text-4xl md:text-5xl font-bold shadow-2xl shadow-brand-500/30 ring-4 ring-background overflow-hidden transition-transform duration-500 group-hover:scale-105">
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  user.name.charAt(0).toUpperCase()
+                )}
+              </div>
+              <div className="absolute -bottom-2 -right-2 bg-green-500 w-8 h-8 rounded-full border-4 border-background flex items-center justify-center animate-pulse">
+                <Zap size={14} className="text-white fill-white" />
+              </div>
             </div>
-            <div className="absolute -bottom-2 -right-2 bg-green-500 w-8 h-8 rounded-full border-4 border-background flex items-center justify-center animate-pulse">
-              <Zap size={14} className="text-white fill-white" />
-            </div>
-          </div>
+          )}
           {activeTab === "overview" && (
             <div className="text-center md:text-left">
               <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-3 tracking-tight">
@@ -800,7 +802,9 @@ Please get in touch to confirm specifications and begin engineering.`;
               user={user}
               onUpgradeRequest={(tier) => {
                 fetchUserTickets();
+                fetchDashboardData();
               }}
+              onUserUpdate={(updated) => setUser(updated)}
             />
           )}
           {activeTab === "playground" ? (
