@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, User } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 
 import { useEffect, useState } from "react";
 
@@ -144,29 +146,22 @@ export default function AdminLayout({
       </main>
 
       {/* Logout Confirmation Modal */}
-      {showLogoutConfirm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-md" onClick={() => setShowLogoutConfirm(false)}></div>
-          <div className="glass-panel p-8 rounded-[2.5rem] border border-card-border max-w-sm w-full relative z-10 shadow-2xl animate-in zoom-in-95 duration-200">
-            <h3 className="text-2xl font-bold text-foreground mb-2">Confirm Logout</h3>
-            <p className="text-foreground/60 mb-8 font-medium">Are you sure you want to end your administrative session?</p>
-            <div className="flex gap-3">
-              <button 
-                onClick={() => setShowLogoutConfirm(false)}
-                className="flex-1 px-4 py-3 rounded-xl bg-foreground/5 border border-card-border text-foreground font-bold hover:bg-foreground/10 transition-colors"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleLogout}
-                className="flex-1 px-4 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-500 transition-colors shadow-lg shadow-red-600/20"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
+      <Modal
+        open={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        title="Confirm logout"
+        description="Are you sure you want to end your administrative session?"
+        size="sm"
+      >
+        <div className="flex gap-3">
+          <Button variant="outline" fullWidth onClick={() => setShowLogoutConfirm(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" fullWidth onClick={handleLogout}>
+            Logout
+          </Button>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

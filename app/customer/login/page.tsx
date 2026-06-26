@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import gsap from "gsap";
 import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
@@ -13,14 +12,6 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const formRef = useRef(null);
-
-  useEffect(() => {
-    gsap.fromTo(formRef.current,
-      { opacity: 0, y: 30, scale: 0.95 },
-      { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "power4.out" }
-    );
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,8 +52,7 @@ export default function LoginPage() {
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div
-        ref={formRef}
-        className="w-full max-w-lg glass-panel p-8 md:p-12 rounded-[2.5rem] relative z-10 shadow-xl border border-card-border"
+        className="w-full max-w-lg glass-panel p-8 md:p-12 rounded-2xl relative z-10 shadow-card border border-card-border animate-fade-up"
       >
         <div className="text-center mb-10">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-400 flex items-center justify-center text-white shadow-xl mx-auto mb-6">

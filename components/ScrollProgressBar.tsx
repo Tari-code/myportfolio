@@ -1,55 +1,33 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import gsap from "gsap";
 
 export default function ScrollProgressBar() {
   const progressRef = useRef<HTMLDivElement>(null);
-  const rafRef = useRef<number>(0);
 
   useEffect(() => {
-    let current = 0;
-    let target = 0;
-
     const update = () => {
-      current += (target - current) * 0.08;
-
-      if (progressRef.current) {
-        gsap.set(progressRef.current, { scaleX: current / 100 });
-      }
-
-      rafRef.current = requestAnimationFrame(update);
-    };
-
-    const onScroll = () => {
+      if (!progressRef.current) return;
+      const scrollTop = window.scrollY;
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      target = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
+      const progress = docHeight > 0 ? scrollTop / docHeight : 0;
+      progressRef.current.style.transform = `scaleX(${progress})`;
     };
 
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    rafRef.current = requestAnimationFrame(update);
-
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
+    window.addEventListener("scroll", update, { passive: true });
+    update();
+    return () => window.removeEventListener("scroll", update);
   }, []);
 
   return (
     <div
-      className="fixed top-0 left-0 w-full h-[3px] z-[10001] origin-left"
-      style={{ transformOrigin: "left center" }}
+      className="fixed top-0 left-0 right-0 h-[2px] z-[200] pointer-events-none origin-left"
+      aria-hidden="true"
     >
       <div
         ref={progressRef}
-        className="h-full w-full"
-        style={{
-          background: "linear-gradient(90deg, #6366f1, #a855f7, #ec4899)",
-          boxShadow: "0 0 12px rgba(99,102,241,0.6), 0 0 30px rgba(168,85,247,0.3)",
-          transform: "scaleX(0)",
-          willChange: "transform",
-        }}
+        className="h-full w-full bg-gradient-brand origin-left will-change-transform"
+        style={{ transform: "scaleX(0)" }}
       />
     </div>
   );

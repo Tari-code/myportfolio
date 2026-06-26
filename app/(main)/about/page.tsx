@@ -3,8 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { ArrowRight, Target, Zap, Globe, Shield, Star, MessageSquare, Send, Quote, User, Briefcase, ChevronRight, CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
-import ThreeDreamscape from "@/components/ThreeDreamscape";
-
 export default function AboutPage() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -54,8 +52,7 @@ export default function AboutPage() {
   };
 
   return (
-    <div className="pt-32 pb-20 px-6 max-w-7xl mx-auto min-h-screen relative overflow-hidden">
-      <ThreeDreamscape />
+    <div className="pt-32 pb-20 px-6 max-w-7xl mx-auto min-h-screen relative overflow-hidden bg-gradient-subtle">
       {/* Fixed Toast Notification */}
       {toast && (
         <div

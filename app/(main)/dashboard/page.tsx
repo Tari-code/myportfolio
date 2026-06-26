@@ -618,8 +618,15 @@ Please get in touch to confirm specifications and begin engineering.`;
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-40 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-brand-500/20 border-t-brand-500 rounded-full animate-spin"></div>
+      <div className="min-h-[60vh] flex items-center justify-center px-4">
+        <div className="flex flex-col items-center gap-4">
+          <div className="grid grid-cols-3 gap-3 w-full max-w-md">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="skeleton h-24 rounded-2xl" />
+            ))}
+          </div>
+          <div className="skeleton h-4 w-48 rounded-md" />
+        </div>
       </div>
     );
   }
